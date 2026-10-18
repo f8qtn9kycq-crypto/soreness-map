@@ -78,8 +78,8 @@ const T={zh:{title:'痠痛記錄',muscles:'肌肉',joints:'關節',zAll:'全身'
 en:{title:'Soreness Map',muscles:'Muscles',joints:'Joints',zAll:'Full body',zNeck:'Neck & shoulders',zArm:'Arms',zTorso:'Torso',zHip:'Hip & thigh',zLeg:'Lower leg & foot',rec:'Log',trend:'Trend',sum:'Summary',front:'Front',back:'Back',hint:'Pick Muscles or Joints, then tap a body part (left/right = your own left/right)',date:'Date',workout:'Related workout (optional)',wph:'e.g. Leg day',save:'Save this entry',clear:'Clear',none:'No parts selected yet',sev:'Discomfort level (0 = none)',scale:'1–3 mild, 4–6 moderate, 7–10 severe',type:'Type',note:'Note (optional)',done:'Done',sore:'Sore',pain:'Pain',tight:'Tight',sharp:'Sharp',numb:'Numb',L:'Left ',R:'Right ',draft:'Current draft',days:'days',part:'Part',empty:'No entries in this range yet',hist:'History',del:'Delete',cf:'Tap again to delete',exp:'Export',imp:'Import JSON',nodl:'File downloads are unavailable here',shot:'Take a screenshot of this screen to share with your trainer or physical therapist',ok:'Imported',bad:'That file isn’t a valid export',bk:'Data is stored only in this browser on this device. Export a backup regularly.',saved:'Saved',parts:'parts'}};
 const K='bodymap.v1',DK='bodymap.draft',LK='bodymap.lang';
 const ld=(k,d)=>{try{const raw=localStorage.getItem(k);return raw===null?d:JSON.parse(raw)}catch{blockedWrites.add(k);return d}};
-const blockedWrites=new Set();
-const sv=(k,v)=>{if(blockedWrites.has(k))return;try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const blockedWrites=new Set(),failedWrites=new Set();
+const sv=(k,v)=>{if(blockedWrites.has(k))return false;try{localStorage.setItem(k,JSON.stringify(v));failedWrites.delete(k);return true}catch{failedWrites.add(k);return false}};
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 const newDraft=()=>({date:today(),workout:'',parts:{}});
 const S={lang:ld(LK,(navigator.language||'').startsWith('zh')?'zh':'en')==='en'?'en':'zh',tab:'rec',view:'F',sel:null,draft:ld(DK,newDraft()),entries:ld(K,[]),sumId:'draft',tp:'jKnee.R',layer:'m',zoom:0,range:30,msg:'',cf:null,dl:typeof Blob==='function'&&typeof URL.createObjectURL==='function'};
@@ -115,7 +115,14 @@ try{S.draft=normalizeEntry(S.draft,true)}catch{S.draft=newDraft();blockedWrites.
 const i=k=>T[S.lang][k],esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const col=s=>`hsl(${125-s*12.5},70%,55%)`;
 const name=k=>{const[p,s]=k.split('.');return i(s)+N[p][S.lang=='zh'?0:1]};
-const persist=()=>{sv(K,S.entries);sv(DK,S.draft)};
+const persist=()=>{const entries=sv(K,S.entries),draft=sv(DK,S.draft);updateStorageWarning();return {entries,draft}};
+function storageWarning(){
+ const blocked=blockedWrites.size?`<p>瀏覽器內既有資料無法安全讀取或格式異常，原資料已保留，停止覆寫該欄位。請先備份原始網站資料，確認備份後再清除網站資料重新開始。<br>Existing browser data could not be safely read or is invalid. It has been preserved and will not be overwritten. Back up the original site data before clearing site data to start again.</p>`:'';
+ const failed=failedWrites.size?`<p>瀏覽器未能保存部分變更，可能是儲存空間不足或權限限制。請勿重新整理或關閉頁面；先匯出備份，再排除限制並重試。<br>The browser could not save some changes, possibly because storage is full or restricted. Keep this page open, export a backup, then resolve the restriction and retry.</p>`:'';
+ if(!blocked&&!failed)return '';
+ return `<div role="alert" class="card">${blocked}${failed}<p>目前頁面中的資料不一定已持久保存。請到「趨勢」匯出目前歷史；未儲存草稿請另行匯出。<br>Data on this page may not be saved permanently. Export current history from Trend and export any unsaved draft separately.</p>${S.dl&&active(S.draft.parts).length?`<button data-a="exd">匯出目前草稿 JSON / Export current draft JSON</button>`:''}</div>`;
+}
+function updateStorageWarning(){const node=document.getElementById('storage-status');if(node)node.innerHTML=storageWarning()}
 const px=(dx,v,s)=>(v=='F')===(s=='R')?100-dx:100+dx;
 const HD='M108 46L108 62C122 65 138 67 149 75C157 80 161 90 161 102C163 122 167 142 171 160C173 178 179 198 184 216C187 226 188 236 184 244C181 252 175 254 172 247C168 238 165 226 162 214C157 196 152 178 149 160C147 146 143 128 140 108C139 124 133 146 131 166C131 182 139 196 141 214C142 244 141 272 138 304C137 316 138 324 137 332C140 350 141 366 137 384C136 392 136 396 135 400C141 402 147 403 146 407L108 407C109 400 110 394 111 386C112 368 113 350 112 336C110 326 108 316 107 306C105 280 103 252 101 226L100 222',MIR='transform="translate(200 0) scale(-1 1)"';
 function sil(){return `<g fill="var(--sil)"><path d="${HD}L100 46Z"/><path ${MIR} d="${HD}L100 46Z"/></g><ellipse cx="100" cy="27" rx="17" ry="22" fill="var(--sil)" stroke="var(--ink)" stroke-width="1.5"/><g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"><path d="${HD}"/><path ${MIR} d="${HD}"/></g>`}
@@ -151,16 +158,17 @@ return `<label>${i('part')}</label><select id="tp">${[['muscles',KS.filter(k=>!i
 <div class="card"><b>${i('hist')} (${S.entries.length})</b>${[...S.entries].reverse().map(e=>`<div class="rw" style="align-items:center"><div style="flex:1">${e.date} ${esc(e.workout)}<br><small>${active(e.parts).length} ${i('parts')}</small></div><button data-a="del" data-v="${e.id}">${S.cf==e.id?i('cf'):i('del')}</button></div>`).join('')}</div>
 <div class="card"><div class="row">${S.dl?`<button data-a="exj" style="flex:1">${i('exp')} JSON</button><button data-a="exc" style="flex:1">${i('exp')} CSV</button>`:''}<button data-a="imp" style="flex:1">${i('imp')}</button></div>${S.dl?'':`<p class="mut">${i('nodl')}</p>`}<input type="file" id="fi" accept=".json,application/json" hidden></div>`}
 function render(){const v={rec,trend,sum}[S.tab]();document.documentElement.lang=S.lang=='zh'?'zh-Hant':'en';
-document.getElementById('app').innerHTML=(S.msg?`<div class="toast">${S.msg}</div>`:'')+`<div class="top"><h1>${i('title')}</h1><button data-a="lang">${S.lang=='zh'?'EN':'中文'}</button></div>`+`<p class="mut" style="font-size:12px">資料留在此瀏覽器，匯出檔案由你保管。本工具僅供記錄，非診斷或治療建議。<br>Data stays in this browser; you control exported files. For logging only; not diagnosis or treatment advice.</p>`+(blockedWrites.size?`<p role="alert" class="card">瀏覽器內既有資料格式異常，原資料已保留；本次變更可能只保留於目前頁面。請先備份瀏覽器內原始網站資料及匯出目前紀錄，重新整理前確認備份，再透過瀏覽器清除網站資料以重新開始。<br>Existing browser data is invalid and has been preserved. Changes may last only for this page session. Back up the original browser site data and export current records before reloading; clear site data in your browser to start again.</p>`:'')+v+`<nav>${['rec','trend','sum'].map(t=>`<button data-a="tab" data-v="${t}" class="${S.tab==t?'on':''}">${i(t)}</button>`).join('')}</nav>`+(S.sel?sheet():'')}
+document.getElementById('app').innerHTML=(S.msg?`<div class="toast">${S.msg}</div>`:'')+`<div class="top"><h1>${i('title')}</h1><button data-a="lang">${S.lang=='zh'?'EN':'中文'}</button></div>`+`<p class="mut" style="font-size:12px">資料留在此瀏覽器，匯出檔案由你保管。本工具僅供記錄，非診斷或治療建議。<br>Data stays in this browser; you control exported files. For logging only; not diagnosis or treatment advice.</p>`+`<div id="storage-status">${storageWarning()}</div>`+v+`<nav>${['rec','trend','sum'].map(t=>`<button data-a="tab" data-v="${t}" class="${S.tab==t?'on':''}">${i(t)}</button>`).join('')}</nav>`+(S.sel?sheet():'')}
 function toast(m){S.msg=m;render();setTimeout(()=>{S.msg='';render()},2200)}
 function setP(k,f){const d=S.draft.parts[k]||(S.draft.parts[k]={s:0,t:[],n:''});f(d);if(!d.s)delete S.draft.parts[k];persist()}
 const csvCell=value=>{let text=String(value);if(/^[\s\uFEFF]*[=+@-]|^[\t\r\n]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'};
 async function exp(kind){const day=today();let data,fn;
-if(kind=='j'){data=JSON.stringify({v:1,entries:S.entries},null,1);fn=`soreness-${day}.json`}
+if(kind=='d'){data=JSON.stringify({v:1,entries:[{id:Date.now(),date:S.draft.date,workout:S.draft.workout,parts:S.draft.parts}]},null,1);fn=`soreness-draft-${day}.json`}
+else if(kind=='j'){data=JSON.stringify({v:1,entries:S.entries},null,1);fn=`soreness-${day}.json`}
 else{const r=[['date','workout','part','side','severity','types','note']];S.entries.forEach(e=>active(e.parts).forEach(([k,d])=>r.push([e.date,e.workout,...k.split('.'),d.s,d.t.join('|'),d.n])));
 data='\uFEFF'+r.map(x=>x.map(csvCell).join(',')).join('\n');fn=`soreness-${day}.csv`}
 try{
- const url=URL.createObjectURL(new Blob([data],{type:kind==='j'?'application/json;charset=utf-8':'text/csv;charset=utf-8'}));
+ const url=URL.createObjectURL(new Blob([data],{type:kind!=='c'?'application/json;charset=utf-8':'text/csv;charset=utf-8'}));
  const anchor=document.createElement('a');anchor.href=url;anchor.download=fn;document.body.appendChild(anchor);
  try{anchor.click()}finally{anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 }catch{toast(i('nodl'))}}
@@ -168,9 +176,11 @@ const H={view:v=>S.view=v,layer:v=>S.layer=v,zoom:v=>S.zoom=+v,tab:v=>S.tab=v,cl
 sev:v=>setP(S.sel,d=>{d.s=+v}),ty:v=>setP(S.sel,d=>{d.t=d.t.includes(v)?d.t.filter(x=>x!=v):[...d.t,v]}),
 clr:()=>{S.draft=newDraft();persist()},
 save(){const parts=Object.fromEntries(active(S.draft.parts));if(!Object.keys(parts).length)return toast(i('none'));
-const e={id:Date.now(),date:S.draft.date,workout:S.draft.workout,parts};S.entries.push(e);S.entries.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);S.draft=newDraft();S.sumId=e.id;S.tab='sum';persist();toast(i('saved'))},
+const e={id:Date.now(),date:S.draft.date,workout:S.draft.workout,parts},entries=[...S.entries,e].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
+if(!sv(K,entries)){sv(DK,S.draft);return toast('尚未儲存；草稿已保留，請重試或匯出。 / Not saved; draft retained. Retry or export it.')}
+S.entries=entries;S.draft=newDraft();S.sumId=e.id;S.tab='sum';const draftSaved=sv(DK,S.draft);toast(draftSaved?i('saved'):'紀錄已儲存，但舊草稿未能清除，重開頁面可能再次出現。 / Entry saved, but the old draft could not be cleared and may reappear after reload.')},
 del(v){if(S.cf!=v){S.cf=v;return}S.entries=S.entries.filter(e=>e.id!=v);S.cf=null;persist()},
-exj:()=>{exp('j');return false},exc:()=>{exp('c');return false},imp:()=>{document.getElementById('fi').click();return false}};
+exj:()=>{exp('j');return false},exd:()=>{exp('d');return false},exc:()=>{exp('c');return false},imp:()=>{document.getElementById('fi').click();return false}};
 document.addEventListener('click',e=>{const k=e.target.closest('[data-k]');if(k&&!e.target.closest('.sheet')){S.sel=k.dataset.k;return render()}
 const a=e.target.closest('[data-a]');if(!a)return;const f=H[a.dataset.a];if(f&&f(a.dataset.v)===false)return;render()});
 document.addEventListener('keydown',e=>{if((e.key=='Enter'||e.key==' ')&&e.target.matches('g[data-k]')){e.preventDefault();S.sel=e.target.dataset.k;render()}});
@@ -185,7 +195,7 @@ else if(id=='fi'&&e.target.files[0]){
   const list=parseImport(JSON.parse(r.result)),ids=new Set(S.entries.map(x=>x.id));
   const added=list.filter(x=>!ids.has(x.id));
   S.entries=[...S.entries,...added].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
-  persist();toast(i('ok'));
+  const saved=sv(K,S.entries);toast(saved?i('ok'):'匯入內容僅保留於目前頁面，尚未儲存；請匯出備份或重新匯入以重試。 / Import is available only on this page and was not saved. Export a backup or import again to retry.');
  }catch{toast(i('bad'))}};r.readAsText(file)
 }});
 render();
