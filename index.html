@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>痠痛記錄 Soreness Map</title>
+<style>
+:root{--bg:#eef2f3;--card:#fff;--ink:#22323a;--mut:#62737b;--line:#cfd9dc;--acc:#2f7f86;--accT:#fff;--sil:#f7fafa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121c1e;--card:#1b2a2d;--ink:#e6eff0;--mut:#9bb0b5;--line:#33484d;--acc:#5fc0c8;--accT:#0b1d20;--sil:#223437}}
+:root[data-theme="dark"]{--bg:#121c1e;--card:#1b2a2d;--ink:#e6eff0;--mut:#9bb0b5;--line:#33484d;--acc:#5fc0c8;--accT:#0b1d20;--sil:#223437}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+main{max-width:520px;margin:0 auto;padding:12px 14px 120px}
+h1{font-size:22px;margin:4px 0}h2{font-size:20px;margin:0 0 4px}
+.top,.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.mut,label{color:var(--mut);font-size:14px}
+label{display:block;margin:8px 0 4px}
+button{font:inherit;color:var(--ink);border:1px solid var(--line);background:var(--card);border-radius:12px;min-height:48px;padding:0 14px}
+button.pri,button.on{background:var(--acc);color:var(--accT);border-color:var(--acc);font-weight:600}
+button:disabled{opacity:.4}
+.seg{display:flex;gap:6px}.seg button{flex:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin:10px 0}
+svg.body{width:100%;max-width:340px;display:block;margin:0 auto}
+.p{cursor:pointer;stroke:var(--mut);stroke-width:1.2;vector-effect:non-scaling-stroke;stroke-dasharray:3 3;fill:var(--card);fill-opacity:.3}
+.ro{pointer-events:none}
+.p.has{stroke-dasharray:none;stroke:var(--ink);fill-opacity:.92}
+g[data-k]:focus-visible{outline:3px solid var(--acc)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;border-radius:0;min-height:58px;background:none;color:var(--mut)}
+nav button.on{background:none;color:var(--acc);border-top:3px solid var(--acc)}
+.veil{position:fixed;inset:0;background:#0006;z-index:19}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:560px;margin:0 auto;max-height:88vh;overflow:auto;background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px #0005}
+.sev{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.sev button{padding:0;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+input,textarea,select{font:inherit;width:100%;min-height:48px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--bg);color:var(--ink)}
+.rw{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.dot{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#111}
+.toast{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:20px}
+small{color:var(--mut)}
+</style></head>
+<body><main id="app"></main>
+<script>
+const FA='M150 152C157 152 164 154 168 160L180 210C176 214 168 214 164 212C158 192 152 172 150 152Z',DL='M144 80C156 78 162 90 161 104C160 112 152 114 146 110C142 100 140 88 144 80Z';
+const Z=[
+['scm','F',[104,58,5,9]],
+['traps','F','M108 62C122 65 138 68 150 76L142 86C130 80 118 74 108 72Z',126,74],
+['chest','F','M102 82C116 78 130 84 140 92L139 112C128 122 112 122 102 116Z',120,102],
+['deltoid','F',DL,152,96],
+['biceps','F','M146 112C153 112 158 118 160 130L163 148C158 152 152 150 150 148C148 136 146 124 146 112Z',154,132],
+['forearmF','F',FA,165,186],
+['abs','F','M102 122C116 122 124 128 126 140L127 176C122 190 110 192 102 190Z',113,158],
+['obliques','F','M127 128C134 126 138 122 139 116C138 140 134 160 132 178C129 184 127 184 127 178Z',133,150],
+['hipFlexor','F','M102 192C116 192 128 190 134 196C138 204 138 214 136 220C124 224 112 222 102 222Z',120,208],
+['quads','F','M112 224C122 224 130 223 133 226C136 248 135 272 133 298C126 304 118 304 112 298C110 270 110 245 112 224Z',123,262],
+['adductors','F','M102 224L111 226C110 250 110 275 109 298C106 298 104 280 103 262C102 250 101 238 102 224Z',106,262],
+['itBand','F','M133 226C137 224 141 222 141 226C142 250 140 276 137 298C136 300 134 300 133 298C135 272 136 248 133 226Z',138,262],
+['shin','F','M114 328C122 326 130 326 132 330C133 350 132 370 130 388C124 390 118 390 114 388C112 370 112 348 114 328Z',122,358],
+['traps','B','M101 60C116 64 134 68 148 78L138 94C124 92 110 86 101 90Z',122,78],
+['rhomboid','B','M102 96C110 96 118 98 126 102L124 126C116 130 108 128 102 128Z',113,113],
+['lats','B','M132 128C138 128 139 118 139 116C138 140 134 162 131 176C122 180 114 176 112 170C116 156 122 140 132 128Z',128,152],
+['erector','B','M101 130C108 130 112 140 114 156C114 170 112 182 108 192L101 196Z',107,165],
+['rearDelt','B',DL,152,96],
+['rotator','B','M126 90C134 88 140 90 141 96L139 108C134 110 128 108 126 104Z',133,99],
+['triceps','B','M146 106C153 108 158 114 160 128L164 148C158 152 152 150 150 146C148 134 146 120 146 106Z',154,128],
+['forearmE','B',FA,165,186],
+['gluteMax','B','M101 196C114 190 130 192 138 202C142 214 138 226 130 232C118 236 108 232 101 226Z',120,216],
+['gluteMed','B','M118 190C128 188 136 192 140 198C140 202 136 204 130 200C124 196 120 194 118 190Z',130,196],
+['hamstrings','B','M104 236C114 236 128 236 136 234C140 256 138 280 134 298C124 304 114 304 108 298C106 276 104 254 104 236Z',120,268],
+['calf','B','M112 322C122 320 132 322 135 328C139 346 136 364 130 376C124 380 118 380 114 376C110 360 110 340 112 322Z',123,350],
+['achilles','B','M118 378C122 380 126 380 128 378L127 394C124 396 121 396 119 394Z',123,388],
+['jNeck','FB',[104,57,8,9]],['jShoulder','FB',[152,90,11,11]],['jElbow','FB',[160,158,9,10]],['jWrist','FB',[174,222,7,7]],['jHand','FB',[178,243,8,10]],
+['jThoracic','B',[108,112,9,18]],['jLumbar','B',[106,166,10,13]],['jSI','B',[112,192,9,8]],['jHip','F',[126,202,12,12]],
+['jKnee','FB',[122,310,12,12]],['jAnkle','FB',[122,387,9,7]],['jFoot','FB',[126,400,13,5]]];
+const N={scm:['頸前側','Front neck'],traps:['上斜方肌','Upper traps'],chest:['胸肌','Chest'],deltoid:['三角肌','Deltoid'],biceps:['肱二頭肌','Biceps'],forearmF:['前臂屈肌','Forearm flexors'],abs:['腹肌','Abs'],obliques:['腹斜肌','Obliques'],hipFlexor:['髖屈肌','Hip flexors'],quads:['股四頭肌','Quads'],adductors:['大腿內側','Inner thigh'],itBand:['大腿外側','Outer thigh (IT band)'],shin:['脛前肌','Shin'],rhomboid:['中背（菱形肌）','Mid-back'],lats:['背闊肌','Lats'],erector:['豎脊肌','Erector spinae'],rearDelt:['後三角肌','Rear delt'],rotator:['旋轉肌群','Rotator cuff'],triceps:['肱三頭肌','Triceps'],forearmE:['前臂伸肌','Forearm extensors'],gluteMax:['臀大肌','Glute max'],gluteMed:['臀中肌','Glute med'],hamstrings:['腿後肌','Hamstrings'],calf:['小腿肌','Calf'],achilles:['阿基里斯腱','Achilles'],
+jNeck:['頸椎','Neck'],jShoulder:['肩關節','Shoulder'],jElbow:['手肘','Elbow'],jWrist:['手腕','Wrist'],jHand:['手','Hand'],jThoracic:['胸椎','Mid-spine'],jLumbar:['腰椎（下背）','Lower back'],jSI:['薦髂關節','SI joint'],jHip:['髖關節','Hip'],jKnee:['膝','Knee'],jAnkle:['腳踝','Ankle'],jFoot:['腳掌','Foot']};
+const TY=['sore','pain','tight','sharp','numb'],isJ=k=>k[0]=='j',KS=[...new Set(Z.map(z=>z[0]))].flatMap(id=>['R','L'].map(s=>id+'.'+s));
+const ZM=[['0 0 200 410','zAll'],['30 35 140 100','zNeck'],['5 95 190 165','zArm'],['40 95 120 140','zTorso'],['40 185 120 150','zHip'],['40 290 120 120','zLeg']];
+const T={zh:{title:'痠痛記錄',muscles:'肌肉',joints:'關節',zAll:'全身',zNeck:'頸與肩',zArm:'手臂',zTorso:'軀幹',zHip:'髖與大腿',zLeg:'小腿與腳',rec:'記錄',trend:'趨勢',sum:'總結',front:'正面',back:'背面',hint:'先選「肌肉」或「關節」，再點身體部位（左右＝你自己的左右）',date:'日期',workout:'相關訓練（選填）',wph:'例如：腿推日',save:'儲存這次紀錄',clear:'清除',none:'尚未選擇部位',sev:'不舒服程度（0＝沒有）',scale:'1–3 輕微、4–6 中等、7–10 嚴重',type:'類型',note:'備註（選填）',done:'完成',sore:'痠',pain:'痛',tight:'緊繃',sharp:'刺痛',numb:'麻',L:'左',R:'右',draft:'目前草稿',days:'天',part:'部位',empty:'這個區間還沒有紀錄',hist:'歷史紀錄',del:'刪除',cf:'再按一次刪除',exp:'匯出',imp:'匯入 JSON',nodl:'此環境無法下載檔案',shot:'請截圖這個畫面，分享給教練或物理治療師',ok:'已匯入',bad:'檔案格式不正確',bk:'資料只存在這個裝置的瀏覽器裡，請定期匯出備份。',saved:'已儲存',parts:'個部位'},
+en:{title:'Soreness Map',muscles:'Muscles',joints:'Joints',zAll:'Full body',zNeck:'Neck & shoulders',zArm:'Arms',zTorso:'Torso',zHip:'Hip & thigh',zLeg:'Lower leg & foot',rec:'Log',trend:'Trend',sum:'Summary',front:'Front',back:'Back',hint:'Pick Muscles or Joints, then tap a body part (left/right = your own left/right)',date:'Date',workout:'Related workout (optional)',wph:'e.g. Leg day',save:'Save this entry',clear:'Clear',none:'No parts selected yet',sev:'Discomfort level (0 = none)',scale:'1–3 mild, 4–6 moderate, 7–10 severe',type:'Type',note:'Note (optional)',done:'Done',sore:'Sore',pain:'Pain',tight:'Tight',sharp:'Sharp',numb:'Numb',L:'Left ',R:'Right ',draft:'Current draft',days:'days',part:'Part',empty:'No entries in this range yet',hist:'History',del:'Delete',cf:'Tap again to delete',exp:'Export',imp:'Import JSON',nodl:'File downloads are unavailable here',shot:'Take a screenshot of this screen to share with your trainer or physical therapist',ok:'Imported',bad:'That file isn’t a valid export',bk:'Data is stored only in this browser on this device. Export a backup regularly.',saved:'Saved',parts:'parts'}};
+const K='bodymap.v1',DK='bodymap.draft',LK='bodymap.lang';
+const ld=(k,d)=>{try{const raw=localStorage.getItem(k);return raw===null?d:JSON.parse(raw)}catch{blockedWrites.add(k);return d}};
+const blockedWrites=new Set();
+const sv=(k,v)=>{if(blockedWrites.has(k))return;try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const newDraft=()=>({date:today(),workout:'',parts:{}});
+const S={lang:ld(LK,(navigator.language||'').startsWith('zh')?'zh':'en')==='en'?'en':'zh',tab:'rec',view:'F',sel:null,draft:ld(DK,newDraft()),entries:ld(K,[]),sumId:'draft',tp:'jKnee.R',layer:'m',zoom:0,range:30,msg:'',cf:null,dl:typeof Blob==='function'&&typeof URL.createObjectURL==='function'};
+const MAP={neck:'jNeck',shoulder:'jShoulder',scapula:'rhomboid',upperBack:'jThoracic',lowerBack:'jLumbar',elbow:'jElbow',hip:'jHip',glute:'gluteMax',thighF:'quads',thighB:'hamstrings',knee:'jKnee',ankle:'jAnkle'};
+const mig=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>{const[p,s]=k.split('.');return[(MAP[p]||p)+'.'+s,v]}));
+// Validate both file imports and persisted data before they reach HTML/SVG rendering.
+const isRecord=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
+function validDate(value){
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+ const d=new Date(value+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value;
+}
+function normalizeEntry(entry,draft=false){
+ if(!isRecord(entry)||!validDate(entry.date)||typeof entry.workout!=='string'||!isRecord(entry.parts))throw Error('Invalid entry');
+ if(!draft&&(!Number.isSafeInteger(entry.id)||entry.id<0))throw Error('Invalid id');
+ const parts={};
+ for(const [key,value] of Object.entries(entry.parts)){
+  const [part,side,...extra]=key.split('.'),mapped=(Object.hasOwn(MAP,part)?MAP[part]:part)+'.'+side;
+  if(extra.length||!KS.includes(mapped)||Object.hasOwn(parts,mapped)||!isRecord(value)||!Number.isInteger(value.s)||value.s<0||value.s>10||!Array.isArray(value.t)||value.t.some(type=>!TY.includes(type))||typeof value.n!=='string')throw Error('Invalid part');
+  parts[mapped]={s:value.s,t:[...new Set(value.t)],n:value.n};
+ }
+ return {...(draft?{}:{id:entry.id}),date:entry.date,workout:entry.workout,parts};
+}
+function parseImport(value){
+ const list=Array.isArray(value)?value:isRecord(value)&&(value.v===undefined||value.v===1)?value.entries:null;
+ if(!Array.isArray(list))throw Error('Invalid export');
+ const entries=list.map(entry=>normalizeEntry(entry)),ids=new Set();
+ for(const entry of entries){if(ids.has(entry.id))throw Error('Duplicate id');ids.add(entry.id)}
+ return entries;
+}
+try{S.entries=parseImport(S.entries)}catch{S.entries=[];blockedWrites.add(K)}
+try{S.draft=normalizeEntry(S.draft,true)}catch{S.draft=newDraft();blockedWrites.add(DK)}
+
+const i=k=>T[S.lang][k],esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const col=s=>`hsl(${125-s*12.5},70%,55%)`;
+const name=k=>{const[p,s]=k.split('.');return i(s)+N[p][S.lang=='zh'?0:1]};
+const persist=()=>{sv(K,S.entries);sv(DK,S.draft)};
+const px=(dx,v,s)=>(v=='F')===(s=='R')?100-dx:100+dx;
+const HD='M108 46L108 62C122 65 138 67 149 75C157 80 161 90 161 102C163 122 167 142 171 160C173 178 179 198 184 216C187 226 188 236 184 244C181 252 175 254 172 247C168 238 165 226 162 214C157 196 152 178 149 160C147 146 143 128 140 108C139 124 133 146 131 166C131 182 139 196 141 214C142 244 141 272 138 304C137 316 138 324 137 332C140 350 141 366 137 384C136 392 136 396 135 400C141 402 147 403 146 407L108 407C109 400 110 394 111 386C112 368 113 350 112 336C110 326 108 316 107 306C105 280 103 252 101 226L100 222',MIR='transform="translate(200 0) scale(-1 1)"';
+function sil(){return `<g fill="var(--sil)"><path d="${HD}L100 46Z"/><path ${MIR} d="${HD}L100 46Z"/></g><ellipse cx="100" cy="27" rx="17" ry="22" fill="var(--sil)" stroke="var(--ink)" stroke-width="1.5"/><g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"><path d="${HD}"/><path ${MIR} d="${HD}"/></g>`}
+function body(v,data,tap,vb){let ro='',h='';
+for(const[id,vw,sh,lx,ly]of Z){if(!vw.includes(v))continue;const cur=!tap||(isJ(id)?'j':'m')==S.layer;
+for(const s of['R','L']){const k=id+'.'+s,d=data[k],on=d&&d.s>0;if(!on&&!(tap&&cur))continue;
+const mir=(v=='F')===(s=='R'),e=Array.isArray(sh),ax=e?sh[0]:lx,ay=e?sh[1]:ly,x=mir?200-ax:ax,
+shp=e?`<ellipse cx="${sh[0]}" cy="${sh[1]}" rx="${sh[2]}" ry="${sh[3]}"`:`<path d="${sh}"`,
+el=`${shp} class="p${on?' has':''}"${mir?' '+MIR:''}${on?` style="fill:${col(d.s)}"`:''}/>${on?`<text x="${x}" y="${ay+4}" text-anchor="middle" font-size="12" font-weight="700" fill="#111">${d.s}</text>`:''}`;
+if(tap&&cur)h+=`<g data-k="${k}" tabindex="0" role="button" aria-label="${name(k)}">${el}</g>`;else ro+=`<g class="ro">${el}</g>`}}
+return `<svg class="body" viewBox="${vb||'0 0 200 410'}">${sil()}${ro}${h}</svg>`}
+const active=o=>Object.entries(o).filter(([,d])=>d.s>0).sort((a,b)=>b[1].s-a[1].s);
+function rec(){const a=active(S.draft.parts);
+return `<div class="seg">${['F','B'].map(v=>`<button data-a="view" data-v="${v}" class="${S.view==v?'on':''}">${i(v=='F'?'front':'back')}</button>`).join('')}</div><div class="seg" style="margin-top:8px">${[['m','muscles'],['j','joints']].map(([v,l])=>`<button data-a="layer" data-v="${v}" class="${S.layer==v?'on':''}">${i(l)}</button>`).join('')}</div><div class="chips">${ZM.map((z,n)=>`<button data-a="zoom" data-v="${n}" class="${S.zoom==n?'on':''}">${i(z[1])}</button>`).join('')}</div><p class="mut">${i('hint')}</p>${body(S.view,S.draft.parts,1,ZM[S.zoom][0])}
+<div class="chips">${a.length?a.map(([k,d])=>`<button data-k="${k}" style="border-left:8px solid ${col(d.s)}">${name(k)} ${d.s}/10</button>`).join(''):`<span class="mut">${i('none')}</span>`}</div>
+<div class="card"><label>${i('date')}</label><input type="date" id="dt" value="${S.draft.date}"><label>${i('workout')}</label><input id="wo" placeholder="${i('wph')}" value="${esc(S.draft.workout)}"></div>
+<div class="row"><button class="pri" data-a="save" style="flex:2">${i('save')}</button><button data-a="clr" style="flex:1">${i('clear')}</button></div><p class="mut">${i('bk')}</p>`}
+function sheet(){const k=S.sel,d=S.draft.parts[k]||{s:0,t:[],n:''},z=d.s>0;
+return `<div class="veil" data-a="close"></div><div class="sheet"><h2>${name(k)}</h2><p>${i('sev')}<br><small>${i('scale')}</small></p>
+<div class="sev">${[...Array(11).keys()].map(n=>`<button data-a="sev" data-v="${n}" class="${d.s==n?'on':''}" style="${n?`border-bottom:5px solid ${col(n)}`:''}">${n}</button>`).join('')}</div>
+<p>${i('type')}</p><div class="chips">${TY.map(y=>`<button data-a="ty" data-v="${y}" ${z?'':'disabled'} class="${d.t.includes(y)?'on':''}">${i(y)}</button>`).join('')}</div>
+<p>${i('note')}</p><textarea id="nt" rows="2" ${z?'':'disabled'}>${esc(d.n)}</textarea><button class="pri" data-a="close" style="width:100%;margin-top:12px">${i('done')}</button></div>`}
+function sum(){const e=S.sumId=='draft'?S.draft:S.entries.find(x=>x.id==S.sumId)||S.draft,sep=S.lang=='zh'?'、':', ';
+const rows=active(e.parts).map(([k,d])=>`<div class="rw"><span class="dot" style="background:${col(d.s)}">${d.s}</span><div><b>${name(k)}</b> ${d.t.map(i).join(sep)}${d.n?`<br><small>${esc(d.n)}</small>`:''}</div></div>`).join('');
+return `<select id="sm"><option value="draft">${i('draft')}</option>${[...S.entries].reverse().map(x=>`<option value="${x.id}" ${x.id==S.sumId?'selected':''}>${x.date} ${esc(x.workout)}</option>`).join('')}</select>
+<div class="card"><div class="row"><b>${e.date}</b><span>${esc(e.workout)}</span></div><div class="row"><div style="flex:1">${body('F',e.parts)}<p class="mut" style="text-align:center;margin:0">${i('front')}</p></div><div style="flex:1">${body('B',e.parts)}<p class="mut" style="text-align:center;margin:0">${i('back')}</p></div></div>${rows||`<p class="mut">${i('none')}</p>`}</div><p class="mut">${i('shot')}</p>`}
+function trend(){const t1=Date.now(),t0=t1-S.range*864e5,X=d=>24+Math.max(0,(new Date(d)-t0)/(t1-t0))*290,Y=s=>150-s*13;
+const pts=S.entries.filter(e=>new Date(e.date)>=t0-864e5).map(e=>({d:e.date,s:(e.parts[S.tp]||{}).s||0}));
+const g=[0,5,10].map(v=>`<line x1="24" x2="316" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="18" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${v}</text>`).join('');
+const ch=pts.length?`<svg viewBox="0 0 330 185" style="width:100%">${g}<polyline fill="none" stroke="var(--acc)" stroke-width="2" points="${pts.map(p=>X(p.d)+','+Y(p.s)).join(' ')}"/>${pts.map(p=>`<circle cx="${X(p.d)}" cy="${Y(p.s)}" r="6" fill="${p.s?col(p.s):'var(--mut)'}" stroke="var(--ink)"/>`).join('')}<text x="24" y="176" font-size="11" fill="var(--mut)">${new Date(t0).toISOString().slice(5,10)}</text><text x="316" y="176" text-anchor="end" font-size="11" fill="var(--mut)">${today().slice(5)}</text></svg>`:`<p class="mut">${i('empty')}</p>`;
+return `<label>${i('part')}</label><select id="tp">${[['muscles',KS.filter(k=>!isJ(k))],['joints',KS.filter(isJ)]].map(([g,a])=>`<optgroup label="${i(g)}">${a.map(k=>`<option value="${k}" ${k==S.tp?'selected':''}>${name(k)}</option>`).join('')}</optgroup>`).join('')}</select>
+<div class="seg" style="margin-top:8px">${[7,30,90].map(n=>`<button data-a="rg" data-v="${n}" class="${S.range==n?'on':''}">${n} ${i('days')}</button>`).join('')}</div><div class="card">${ch}</div>
+<div class="card"><b>${i('hist')} (${S.entries.length})</b>${[...S.entries].reverse().map(e=>`<div class="rw" style="align-items:center"><div style="flex:1">${e.date} ${esc(e.workout)}<br><small>${active(e.parts).length} ${i('parts')}</small></div><button data-a="del" data-v="${e.id}">${S.cf==e.id?i('cf'):i('del')}</button></div>`).join('')}</div>
+<div class="card"><div class="row">${S.dl?`<button data-a="exj" style="flex:1">${i('exp')} JSON</button><button data-a="exc" style="flex:1">${i('exp')} CSV</button>`:''}<button data-a="imp" style="flex:1">${i('imp')}</button></div>${S.dl?'':`<p class="mut">${i('nodl')}</p>`}<input type="file" id="fi" accept=".json,application/json" hidden></div>`}
+function render(){const v={rec,trend,sum}[S.tab]();document.documentElement.lang=S.lang=='zh'?'zh-Hant':'en';
+document.getElementById('app').innerHTML=(S.msg?`<div class="toast">${S.msg}</div>`:'')+`<div class="top"><h1>${i('title')}</h1><button data-a="lang">${S.lang=='zh'?'EN':'中文'}</button></div>`+`<p class="mut" style="font-size:12px">資料留在此瀏覽器，匯出檔案由你保管。本工具僅供記錄，非診斷或治療建議。<br>Data stays in this browser; you control exported files. For logging only; not diagnosis or treatment advice.</p>`+(blockedWrites.size?`<p role="alert" class="card">瀏覽器內既有資料格式異常，原資料已保留；本次變更可能只保留於目前頁面。請先備份瀏覽器內原始網站資料及匯出目前紀錄，重新整理前確認備份，再透過瀏覽器清除網站資料以重新開始。<br>Existing browser data is invalid and has been preserved. Changes may last only for this page session. Back up the original browser site data and export current records before reloading; clear site data in your browser to start again.</p>`:'')+v+`<nav>${['rec','trend','sum'].map(t=>`<button data-a="tab" data-v="${t}" class="${S.tab==t?'on':''}">${i(t)}</button>`).join('')}</nav>`+(S.sel?sheet():'')}
+function toast(m){S.msg=m;render();setTimeout(()=>{S.msg='';render()},2200)}
+function setP(k,f){const d=S.draft.parts[k]||(S.draft.parts[k]={s:0,t:[],n:''});f(d);if(!d.s)delete S.draft.parts[k];persist()}
+const csvCell=value=>{let text=String(value);if(/^[\s\uFEFF]*[=+@-]|^[\t\r\n]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'};
+async function exp(kind){const day=today();let data,fn;
+if(kind=='j'){data=JSON.stringify({v:1,entries:S.entries},null,1);fn=`soreness-${day}.json`}
+else{const r=[['date','workout','part','side','severity','types','note']];S.entries.forEach(e=>active(e.parts).forEach(([k,d])=>r.push([e.date,e.workout,...k.split('.'),d.s,d.t.join('|'),d.n])));
+data='\uFEFF'+r.map(x=>x.map(csvCell).join(',')).join('\n');fn=`soreness-${day}.csv`}
+try{
+ const url=URL.createObjectURL(new Blob([data],{type:kind==='j'?'application/json;charset=utf-8':'text/csv;charset=utf-8'}));
+ const anchor=document.createElement('a');anchor.href=url;anchor.download=fn;document.body.appendChild(anchor);
+ try{anchor.click()}finally{anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+}catch{toast(i('nodl'))}}
+const H={view:v=>S.view=v,layer:v=>S.layer=v,zoom:v=>S.zoom=+v,tab:v=>S.tab=v,close:()=>S.sel=null,lang:()=>{S.lang=S.lang=='zh'?'en':'zh';sv(LK,S.lang)},rg:v=>S.range=+v,
+sev:v=>setP(S.sel,d=>{d.s=+v}),ty:v=>setP(S.sel,d=>{d.t=d.t.includes(v)?d.t.filter(x=>x!=v):[...d.t,v]}),
+clr:()=>{S.draft=newDraft();persist()},
+save(){const parts=Object.fromEntries(active(S.draft.parts));if(!Object.keys(parts).length)return toast(i('none'));
+const e={id:Date.now(),date:S.draft.date,workout:S.draft.workout,parts};S.entries.push(e);S.entries.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);S.draft=newDraft();S.sumId=e.id;S.tab='sum';persist();toast(i('saved'))},
+del(v){if(S.cf!=v){S.cf=v;return}S.entries=S.entries.filter(e=>e.id!=v);S.cf=null;persist()},
+exj:()=>{exp('j');return false},exc:()=>{exp('c');return false},imp:()=>{document.getElementById('fi').click();return false}};
+document.addEventListener('click',e=>{const k=e.target.closest('[data-k]');if(k&&!e.target.closest('.sheet')){S.sel=k.dataset.k;return render()}
+const a=e.target.closest('[data-a]');if(!a)return;const f=H[a.dataset.a];if(f&&f(a.dataset.v)===false)return;render()});
+document.addEventListener('keydown',e=>{if((e.key=='Enter'||e.key==' ')&&e.target.matches('g[data-k]')){e.preventDefault();S.sel=e.target.dataset.k;render()}});
+document.addEventListener('input',e=>{const id=e.target.id;if(id=='dt')S.draft.date=e.target.value||today();else if(id=='wo')S.draft.workout=e.target.value;else if(id=='nt')setP(S.sel,d=>{d.n=e.target.value});persist()});
+document.addEventListener('change',e=>{const id=e.target.id,v=e.target.value;
+if(id=='sm'){S.sumId=v;render()}else if(id=='tp'){S.tp=v;render()}
+else if(id=='fi'&&e.target.files[0]){
+ const file=e.target.files[0];e.target.value='';
+ if(file.size>10*1024*1024){toast(i('bad'));return}
+ const r=new FileReader();r.onerror=()=>toast(i('bad'));
+ r.onload=()=>{try{
+  const list=parseImport(JSON.parse(r.result)),ids=new Set(S.entries.map(x=>x.id));
+  const added=list.filter(x=>!ids.has(x.id));
+  S.entries=[...S.entries,...added].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
+  persist();toast(i('ok'));
+ }catch{toast(i('bad'))}};r.readAsText(file)
+}});
+render();
+
+</script></body></html>
