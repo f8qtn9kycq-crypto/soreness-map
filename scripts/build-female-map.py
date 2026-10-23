@@ -24,7 +24,13 @@ def hair(view):
  cap=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{389+dx} 164Q{374+dx} 192 {350+dx} 195Q{320+dx} 222 {290+dx} 195Q{266+dx} 192 {251+dx} 164Z'
  fringe=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{383+dx} 147Q{378+dx} 112 {368+dx} 94Q{305+dx} 99 {260+dx} 72Q{251+dx} 102 {257+dx} 145Z'
  lines=([f'M{274+dx} 61Q{320+dx} 86 {368+dx} 94',f'M{294+dx} 15Q{325+dx} 1 {347+dx} 28'] if view=='F' else [f'M{265+dx} 89Q{320+dx} 157 {378+dx} 87',f'M{277+dx} 69Q{320+dx} 127 {368+dx} 67',f'M{295+dx} 18Q{320+dx} 4 {345+dx} 28'])
- return {'hairBack':bun,'hairFront':fringe if view=='F' else cap,'hairLines':lines}
+ if view=='B':
+  # 髮髻融入後腦；兩側髮際較低、中央柔和上凹，露出後頸。
+  cap='M1068 139C1054 78 1080 29 1138 24C1195 20 1223 74 1210 139Q1206 177 1190 202Q1178 215 1167 211C1156 202 1150 185 1140 185C1130 185 1124 202 1113 211Q1100 215 1090 202Q1074 177 1068 139Z'
+  bun='M1093 87C1090 45 1110 24 1140 28C1178 27 1194 60 1185 93C1174 130 1112 142 1093 87Z'
+  lines=['M1106 77C1104 49 1121 36 1139 36C1164 36 1180 56 1173 78C1164 106 1126 117 1112 94', 'M1120 81C1111 59 1131 39 1150 43', 'M1072 121Q1090 150 1120 159', 'M1078 152Q1094 178 1111 183', 'M1206 119Q1189 152 1160 163', 'M1198 153Q1186 179 1169 187', 'M1129 139Q1135 161 1121 188', 'M1153 139Q1147 162 1161 188']
+  return {'hairBack':'','hairFront':cap+' '+bun,'hairLines':lines}
+ return {'hairBack':bun,'hairFront':fringe,'hairLines':lines}
 
 views={view:{'viewBox':view_boxes[view][0],'outline':outlines[n],'art':[{'slug':a['slug'],'path':d} for a in models[view] if a['slug']=='head' for paths in a['path'].values() for d in paths],**hair(view)} for n,view in enumerate(['F','B'])}
 def native(view,slug,side):
