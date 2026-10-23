@@ -39,7 +39,7 @@ const clicks=app();let chosen=[];
 const svg={getScreenCTM(){return {inverse(){return null}}},createSVGPoint(){return {matrixTransform(){return {x:25,y:50}}}},querySelectorAll(){return chosen.map(key=>({dataset:{location:key},querySelector(){return {isPointInFill(point){assert.equal(point.x,25);assert.equal(point.y,50);return true}}}}))}};
 function clickAt(keys){chosen=keys;clicks.events.click({detail:1,clientX:20,clientY:40,target:{closest(selector){return selector==='svg[data-map]'?svg:null}}})}
 clickAt(['hipFlexor.R','adductors.R']);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),chosen);assert.equal(clicks.run('S.focusCandidates'),true);
-clickAt([]);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),[]);
+clickAt([]);assert.match(clicks.run('S.msg'),/此處沒有可選位置/);assert.match(clicks.nodes.app.innerHTML,/role="status"/);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),[]);
 clickAt(['deltoid.R']);assert.equal(clicks.run('S.sel'),'deltoid.R');assert.deepEqual(clicks.plain('S.mapCandidates'),[]);assert.equal(clicks.run('S.focusReturn'),'g[data-location="deltoid.R"]');
 console.log('PASS 點圖單一命中開啟／重疊不代選／空白不選，座標轉換與原觸發點還原');
 
