@@ -19,7 +19,7 @@ def hair(view):
  fringe=f'M{246+dx} 143q-16 -90 46 -106q58 -17 93 28q19 27 13 84l-15 4q-8 -26 -14 -50q-39 -13 -69 8q-27 16 -42 21l-5 19Z'
  lines=[f'M{273+dx} 70q-23 53 -23 164',f'M{378+dx} 145l9 89']
  return {'hairBack':outer if view=='F' else '', 'hairFront':fringe if view=='F' else outer,'hairLines':lines}
-views={view:{'viewBox':view_boxes[view][0],'outline':outlines[n],'art':[{'slug':a['slug'],'path':d} for a in models[view] if a['slug']!='hair' for paths in a['path'].values() for d in paths],**hair(view)} for n,view in enumerate(['F','B'])}
+views={view:{'viewBox':view_boxes[view][0],'outline':outlines[n],'art':[{'slug':a['slug'],'path':d} for a in models[view] if a['slug']=='head' for paths in a['path'].values() for d in paths],**hair(view)} for n,view in enumerate(['F','B'])}
 def native(view,slug,side):
  # Upstream left/right are screen-side fragments. Convert to the recorder's anatomical side.
  src='left' if (view=='F')==(side=='R') else 'right'

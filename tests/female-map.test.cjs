@@ -30,3 +30,17 @@ console.log('PASS 圖形失敗仍可用清單開啟面板、Esc關閉');
 for(const p of map.locations)assert(!/z\s+m/i.test(p.path.replace(/z\s+M/g,'zM')),`relative fragment concatenation ${p.view}:${p.id}`);
 assert.match(map.source.license,/Copyright \(c\) 2022 ELABBASSI Hicham/);
 console.log('PASS MIT來源與獨立fragment起點保留');
+const ime=app();ime.run('openPart("jNeck.R","#map-part")');
+for(const extra of [{isComposing:true},{keyCode:229}]){ime.events.keydown({key:'Escape',preventDefault(){throw Error('IME Esc must remain native')},...extra});assert.equal(ime.run('S.sel'),'jNeck.R')}
+ime.events.keydown({key:'Escape',preventDefault(){}});assert.equal(ime.run('S.sel'),null);
+ime.run("S.mapCandidates=['traps.R','rhomboid.R'];H.tab('trend')");assert.deepEqual(ime.plain('S.mapCandidates'),[]);
+console.log('PASS IME組字Esc不關閉、一般Esc仍有效、分頁切換清除候選');
+const clicks=app();let chosen=[];
+const svg={getScreenCTM(){return {inverse(){return null}}},createSVGPoint(){return {matrixTransform(){return {x:25,y:50}}}},querySelectorAll(){return chosen.map(key=>({dataset:{location:key},querySelector(){return {isPointInFill(point){assert.equal(point.x,25);assert.equal(point.y,50);return true}}}}))}};
+function clickAt(keys){chosen=keys;clicks.events.click({detail:1,clientX:20,clientY:40,target:{closest(selector){return selector==='svg[data-map]'?svg:null}}})}
+clickAt(['hipFlexor.R','adductors.R']);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),chosen);assert.equal(clicks.run('S.focusCandidates'),true);
+clickAt([]);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),[]);
+clickAt(['deltoid.R']);assert.equal(clicks.run('S.sel'),'deltoid.R');assert.deepEqual(clicks.plain('S.mapCandidates'),[]);assert.equal(clicks.run('S.focusReturn'),'g[data-location="deltoid.R"]');
+console.log('PASS 點圖單一命中開啟／重疊不代選／空白不選，座標轉換與原觸發點還原');
+
+assert(map.views.F.art.every(a=>a.slug==='head'));assert(map.views.B.art.every(a=>a.slug==='head'));console.log('PASS 體表輪廓不渲染內部肌肉解剖線，互動位置維持不變');

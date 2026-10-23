@@ -94,15 +94,15 @@ const T={zh:{title:'痠痛記錄',muscles:'肌肉與軟組織',joints:'關節與
 en:{title:'Soreness Map',muscles:'Muscles & soft tissues',joints:'Joints & regions',zAll:'Full body',zNeck:'Neck & shoulders',zArm:'Arms',zTorso:'Torso',zHip:'Hip & thigh',zLeg:'Lower leg & foot',rec:'Log',trend:'Trend',sum:'Summary',front:'Front',back:'Back',hint:'Pick a category, then tap a body part (left/right = your own left/right)',date:'Date',workout:'Related workout (optional)',wph:'e.g. Leg day',save:'Save this entry',clear:'Clear',none:'No parts selected yet',sev:'Discomfort level (1–10)',scale:'1–3 mild, 4–6 moderate, 7–10 severe',type:'Type',note:'Note (optional)',done:'Done',sore:'Sore',pain:'Pain',tight:'Tight',sharp:'Sharp',numb:'Numb',L:'Left ',R:'Right ',draft:'Current draft',days:'days',part:'Part',empty:'No entries in this range yet',hist:'History',del:'Delete',cf:'Tap again to delete',exp:'Export',imp:'Import JSON',nodl:'File downloads are unavailable here',shot:'Take a screenshot of this screen to share with your trainer or physical therapist',ok:'Imported',bad:'That file isn’t a valid export',bk:'Data is stored only in this browser on this device. Export a backup regularly.',saved:'Saved',parts:'parts'}};
 Object.assign(T.zh,{clearPart:'清除此部位',locationHint:'記錄感覺位置，不能判定受傷組織。中央或更細的位置請先備註，不需判定病因；分享用 CSV 預設不含備註。',trendHint:'只顯示已記錄部位的分數；空白與舊紀錄的 0 不代表沒有不適。圓點是各次紀錄，未連線，不代表連續量測。',trendEmpty:'這個區間沒有此部位的有效分數紀錄',backup:'完整備份（含訓練文字與備註）',backupHint:'JSON 可還原完整歷史；完整 CSV 供閱讀，不能還原。',shareCSV:'分享用 CSV',shareStart:'起始日期（留空＝不限）',shareEnd:'結束日期（留空＝不限）',shareText:'包含訓練文字與備註（可能含敏感資訊）',shareHint:'僅匯出已儲存的歷史，不含目前草稿；預設排除訓練文字與備註。下載到本機，不會自動上傳 Google；CSV 不能還原，請另存完整 JSON 備份。',shareReady:'可匯出 {entries} 筆紀錄、{rows} 列部位資料',shareInvalid:'請輸入有效日期，且起始日期不可晚於結束日期。',shareEmpty:'所選日期沒有可匯出的部位紀錄。'});
 Object.assign(T.en,{clearPart:'Clear this part',locationHint:'Log where you feel discomfort; this cannot identify injured tissue. Use notes for central or more precise locations without deciding a cause. Share CSV excludes notes by default.',trendHint:'Only recorded scores for this part appear. Missing values and legacy 0 values do not mean no discomfort. Dots are not connected; no continuous measurements are implied.',trendEmpty:'No recorded scores for this part in this range',backup:'Full backup (includes workout text and notes)',backupHint:'JSON restores full history. Full CSV is for reading and cannot restore data.',shareCSV:'Share CSV',shareStart:'Start date (blank = no limit)',shareEnd:'End date (blank = no limit)',shareText:'Include workout text and notes (may contain sensitive information)',shareHint:'Exports saved history only, without the current draft. Workout text and notes are excluded by default. Downloads locally and does not upload to Google. CSV cannot restore data; keep a full JSON backup.',shareReady:'Ready: {entries} entries, {rows} part rows',shareInvalid:'Enter valid dates with the start on or before the end.',shareEmpty:'No part records to export for these dates.'});
-Object.assign(T.zh,{choosePosition:'或用清單選擇位置',mapLabel:'女性人體位置示意',mapUnavailable:'人體圖未載入，請使用位置清單；紀錄與備份功能仍可使用。',candidateTitle:'此處有多個位置，請確認要記錄哪一個',artCredit:'人體圖來源與授權'});
-Object.assign(T.en,{choosePosition:'Or choose a location from the list',mapLabel:'Female body location illustration',mapUnavailable:'The body illustration could not load. Use the location list; logging and backups remain available.',candidateTitle:'Several locations overlap here. Choose the one to record.',artCredit:'Body illustration source and license'});
+Object.assign(T.zh,{choosePosition:'或用清單選擇位置',mapLabel:'女性人體位置示意',mapHint:'小部位可先放大，或用下方位置清單精確選取。',mapUnavailable:'人體圖未載入，請使用位置清單；紀錄與備份功能仍可使用。',candidateTitle:'此處有多個位置，請確認要記錄哪一個',artCredit:'人體圖來源與授權'});
+Object.assign(T.en,{choosePosition:'Or choose a location from the list',mapLabel:'Female body location illustration',mapHint:'For small areas, zoom in or use the location list below.',mapUnavailable:'The body illustration could not load. Use the location list; logging and backups remain available.',candidateTitle:'Several locations overlap here. Choose the one to record.',artCredit:'Body illustration source and license'});
 const K='bodymap.v1',DK='bodymap.draft',LK='bodymap.lang';
 const ld=(k,d)=>{try{const raw=localStorage.getItem(k);return raw===null?d:JSON.parse(raw)}catch{blockedWrites.add(k);return d}};
 const blockedWrites=new Set(),failedWrites=new Set();
 const sv=(k,v)=>{if(blockedWrites.has(k))return false;try{localStorage.setItem(k,JSON.stringify(v));failedWrites.delete(k);return true}catch{failedWrites.add(k);return false}};
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 const newDraft=()=>({date:today(),workout:'',parts:{}});
-const S={lang:ld(LK,(navigator.language||'').startsWith('zh')?'zh':'en')==='en'?'en':'zh',tab:'rec',view:'F',sel:null,draft:ld(DK,newDraft()),entries:ld(K,[]),sumId:'draft',tp:'jKnee.R',layer:'m',zoom:0,range:30,mapCandidates:[],share:{start:'',end:'',text:false},msg:'',cf:null,dl:typeof Blob==='function'&&typeof URL.createObjectURL==='function'};
+const S={lang:ld(LK,(navigator.language||'').startsWith('zh')?'zh':'en')==='en'?'en':'zh',tab:'rec',view:'F',sel:null,draft:ld(DK,newDraft()),entries:ld(K,[]),sumId:'draft',tp:'jKnee.R',layer:'m',zoom:0,range:30,mapCandidates:[],focusReturn:null,focusCandidates:false,share:{start:'',end:'',text:false},msg:'',cf:null,dl:typeof Blob==='function'&&typeof URL.createObjectURL==='function'};
 const MAP={neck:'jNeck',shoulder:'jShoulder',scapula:'rhomboid',upperBack:'jThoracic',lowerBack:'jLumbar',elbow:'jElbow',hip:'jHip',glute:'gluteMax',thighF:'quads',thighB:'hamstrings',knee:'jKnee',ankle:'jAnkle'};
 const mig=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>{const[p,s]=k.split('.');return[(MAP[p]||p)+'.'+s,v]}));
 // Validate both file imports and persisted data before they reach HTML/SVG rendering.
@@ -145,8 +145,9 @@ function storageWarning(){
 function updateStorageWarning(){const node=document.getElementById('storage-status');if(node)node.innerHTML=storageWarning()}
 const px=(dx,v,s)=>(v=='F')===(s=='R')?100-dx:100+dx;
 const femaleMap=typeof window!=='undefined'?window.FEMALE_MAP:null;
-const mapAvailable=!!(femaleMap&&femaleMap.views&&Array.isArray(femaleMap.locations));
+const mapAvailable=!!(femaleMap&&Array.isArray(femaleMap.locations)&&['F','B'].every(v=>femaleMap.views?.[v]&&typeof femaleMap.views[v].outline==='string'&&Array.isArray(femaleMap.views[v].art)&&femaleMap.zooms?.[v]?.length===6));
 const visibleLocations=(v,layer=S.layer)=>Z.filter(z=>z[1].includes(v)&&(isJ(z[0])?'j':'m')===layer).flatMap(z=>['R','L'].map(side=>z[0]+'.'+side));
+function openPart(key,trigger){if(!KS.includes(key))return;S.sel=key;S.mapCandidates=[];S.focusCandidates=false;S.focusReturn=trigger||`g[data-location="${key}"]`}
 function locationChoices(){const keys=visibleLocations(S.view);
 return `<div class="map-list"><label for="map-part">${i('choosePosition')}</label><select id="map-part"><option value="">${i('choosePosition')}</option>${keys.map(k=>`<option value="${k}">${name(k)}${S.draft.parts[k]?.s>0?' · '+S.draft.parts[k].s+'/10':''}</option>`).join('')}</select></div>`}
 function body(v,data,tap){
@@ -155,7 +156,7 @@ function body(v,data,tap){
  const decoration=`<path class="outline" d="${view.outline}"/>${view.hairBack?`<path class="hair" d="${view.hairBack}"/>`:''}${view.art.map(a=>`<path class="art ${a.slug==='head'?'head':''}" d="${a.path}"/>`).join('')}${view.hairFront?`<path class="hair" d="${view.hairFront}"/>`:''}${(view.hairLines||[]).map(d=>`<path class="hair-lines" d="${d}"/>`).join('')}`;
  const regions=locations.map(p=>{const k=p.id+'.'+p.side,d=data[k],on=d&&d.s>0,cur=tap&&(isJ(p.id)?'j':'m')===S.layer;if(!on&&!cur)return '';
  const attrs=cur?`data-k="${k}" data-location="${k}" tabindex="0" role="button" aria-label="${name(k)}${on?' '+d.s+'/10':''}"`:'class="ro"';
- return `<g ${attrs}><path class="map-hit${on?' has':''}"${cur?' data-hit="true"':''} d="${p.path}"${on?` style="fill:${col(d.s)}"`:''}/>${on?`<text x="${p.labelPoint[0]}" y="${p.labelPoint[1]}" text-anchor="middle" dominant-baseline="middle" font-size="30" font-weight="700" fill="#111" stroke="#fff" stroke-width="1" paint-order="stroke" pointer-events="none">${d.s}</text>`:''}</g>`;
+ return `<g ${attrs}><path class="map-hit${on?' has':''}"${cur?' data-hit="true"':''} d="${p.path}"${on?` style="fill:${col(d.s)}"`:''}/>${on?`<text x="${p.labelPoint[0]}" y="${p.labelPoint[1]}" text-anchor="middle" dominant-baseline="middle" font-size="${tap?30:64}" font-weight="700" fill="#111" stroke="#fff" stroke-width="1" paint-order="stroke" pointer-events="none">${d.s}</text>`:''}</g>`;
  }).join('');
  const sides=(!tap||S.zoom===0)?['R','L'].map(side=>`<text x="${(v==='F'?320:1140)+((v==='F')===(side==='R')?-220:220)}" y="80" text-anchor="middle" font-size="28" fill="var(--mut)" pointer-events="none">${i(side)}</text>`).join(''):'';
  return `<svg class="body" data-map="${v}" viewBox="${tap?femaleMap.zooms[v][S.zoom]:view.viewBox}" role="group" aria-label="${i(v==='F'?'front':'back')} · ${i('mapLabel')}">${decoration}${regions}${sides}</svg>`;
@@ -163,7 +164,7 @@ function body(v,data,tap){
 function mapCandidates(){const keys=S.mapCandidates.filter(k=>visibleLocations(S.view).includes(k));return keys.length>1?`<div class="card map-candidates" role="group" aria-label="${i('candidateTitle')}"><p role="status">${i('candidateTitle')}</p><div class="chips">${keys.map(k=>`<button data-k="${k}">${name(k)}</button>`).join('')}</div></div>`:''}
 const active=o=>Object.entries(o).filter(([,d])=>d.s>0).sort((a,b)=>b[1].s-a[1].s);
 function rec(){const a=active(S.draft.parts);
-return `<div class="seg">${['F','B'].map(v=>`<button data-a="view" data-v="${v}" class="${S.view==v?'on':''}">${i(v=='F'?'front':'back')}</button>`).join('')}</div><div class="seg" style="margin-top:8px">${[['m','muscles'],['j','joints']].map(([v,l])=>`<button data-a="layer" data-v="${v}" class="${S.layer==v?'on':''}">${i(l)}</button>`).join('')}</div><div class="chips">${ZM.map((z,n)=>`<button data-a="zoom" data-v="${n}" class="${S.zoom==n?'on':''}">${i(z[1])}</button>`).join('')}</div><p class="mut">${i('hint')}</p><p class="mut">${i('locationHint')}</p>${locationChoices()}${mapCandidates()}${body(S.view,S.draft.parts,1)}<p class="mut" style="font-size:12px"><a href="THIRD-PARTY-NOTICES.md" style="color:var(--acc)">${i('artCredit')}</a></p>
+return `<div class="seg">${['F','B'].map(v=>`<button data-a="view" data-v="${v}" class="${S.view==v?'on':''}">${i(v=='F'?'front':'back')}</button>`).join('')}</div><div class="seg" style="margin-top:8px">${[['m','muscles'],['j','joints']].map(([v,l])=>`<button data-a="layer" data-v="${v}" class="${S.layer==v?'on':''}">${i(l)}</button>`).join('')}</div><div class="chips">${ZM.map((z,n)=>`<button data-a="zoom" data-v="${n}" class="${S.zoom==n?'on':''}">${i(z[1])}</button>`).join('')}</div><p class="mut">${i('hint')}</p><p class="mut">${i('mapHint')}</p><p class="mut">${i('locationHint')}</p>${locationChoices()}${mapCandidates()}${body(S.view,S.draft.parts,1)}<p class="mut" style="font-size:12px"><a href="THIRD-PARTY-NOTICES.md" style="color:var(--acc)">${i('artCredit')}</a></p>
 <div class="chips">${a.length?a.map(([k,d])=>`<button data-k="${k}" style="border-left:8px solid ${col(d.s)}">${name(k)} ${d.s}/10</button>`).join(''):`<span class="mut">${i('none')}</span>`}</div>
 <div class="card"><label>${i('date')}</label><input type="date" id="dt" value="${S.draft.date}"><label>${i('workout')}</label><input id="wo" placeholder="${i('wph')}" value="${esc(S.draft.workout)}"></div>
 <div class="row"><button class="pri" data-a="save" style="flex:2">${i('save')}</button><button data-a="clr" style="flex:1">${i('clear')}</button></div><p class="mut">${i('bk')}</p>`}
@@ -201,7 +202,7 @@ function sharePanel(){const result=shareExport(S.entries,S.share,S.lang),message
 }
 function render(){const focused=document.activeElement,wasSheet=!!(focused&&focused.closest('.sheet')),focusAction=wasSheet?focused.dataset?.a:null,focusValue=wasSheet?focused.dataset?.v:null;const v={rec,trend,sum}[S.tab]();document.documentElement.lang=S.lang=='zh'?'zh-Hant':'en';
 document.getElementById('app').innerHTML=`<div id="page-content"${S.sel?' inert':''}>`+(S.msg?`<div class="toast">${S.msg}</div>`:'')+`<div class="top"><h1>${i('title')}</h1><button data-a="lang">${S.lang=='zh'?'EN':'中文'}</button></div>`+`<p class="mut" style="font-size:12px">資料留在此瀏覽器，匯出檔案由你保管。本工具僅供記錄，非診斷或治療建議。<br>Data stays in this browser; you control exported files. For logging only; not diagnosis or treatment advice.</p>`+`<div id="storage-status">${storageWarning()}</div>`+v+`<nav>${['rec','trend','sum'].map(t=>`<button data-a="tab" data-v="${t}" class="${S.tab==t?'on':''}">${i(t)}</button>`).join('')}</nav>`+'</div>'+(S.sel?sheet():'');
- if(typeof document.querySelector==='function'){if(S.sel){const selector=focusAction?`.sheet [data-a="${focusAction}"]${focusValue!==undefined?`[data-v="${focusValue}"]`:''}`:'#part-title';(document.querySelector(selector)||document.getElementById('part-title'))?.focus()}else if(wasSheet)document.getElementById('map-part')?.focus()}
+ if(typeof document.querySelector==='function'){if(S.sel){const selector=focusAction?`.sheet [data-a="${focusAction}"]${focusValue!==undefined?`[data-v="${focusValue}"]`:''}`:'#part-title';(document.querySelector(selector)||document.getElementById('part-title'))?.focus()}else if(wasSheet)(document.querySelector(S.focusReturn||'#map-part')||document.getElementById('map-part'))?.focus();else if(S.focusCandidates){document.querySelector('.map-candidates button')?.focus();S.focusCandidates=false}}
 }
 
 function toast(m){S.msg=m;render();setTimeout(()=>{S.msg='';render()},2200)}
@@ -218,7 +219,7 @@ try{
  const anchor=document.createElement('a');anchor.href=url;anchor.download=fn;document.body.appendChild(anchor);
  try{anchor.click()}finally{anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 }catch{toast(i('nodl'))}}
-const H={view:v=>{S.view=v;S.mapCandidates=[]},layer:v=>{S.layer=v;S.mapCandidates=[]},zoom:v=>{S.zoom=+v;S.mapCandidates=[]},tab:v=>S.tab=v,close:()=>S.sel=null,lang:()=>{S.lang=S.lang=='zh'?'en':'zh';sv(LK,S.lang)},rg:v=>S.range=+v,
+const H={view:v=>{S.view=v;S.mapCandidates=[]},layer:v=>{S.layer=v;S.mapCandidates=[]},zoom:v=>{S.zoom=+v;S.mapCandidates=[]},tab:v=>{S.tab=v;S.mapCandidates=[];S.focusCandidates=false},close:()=>S.sel=null,lang:()=>{S.lang=S.lang=='zh'?'en':'zh';sv(LK,S.lang)},rg:v=>S.range=+v,
 sev:v=>setP(S.sel,d=>{d.s=+v}),ty:v=>setP(S.sel,d=>{d.t=d.t.includes(v)?d.t.filter(x=>x!=v):[...d.t,v]}),
 clr:()=>{S.draft=newDraft();persist()},
 save(){const parts=Object.fromEntries(active(S.draft.parts));if(!Object.keys(parts).length)return toast(i('none'));
@@ -233,21 +234,22 @@ document.addEventListener('click',e=>{
   const matrix=svg.getScreenCTM();if(!matrix)return;
   const point=svg.createSVGPoint();point.x=e.clientX;point.y=e.clientY;const local=point.matrixTransform(matrix.inverse());
   const hits=[...svg.querySelectorAll('g[data-location]')].filter(g=>g.querySelector('[data-hit]').isPointInFill(local)).map(g=>g.dataset.location);
-  if(hits.length===1){S.sel=hits[0];S.mapCandidates=[]}else S.mapCandidates=hits;
+  if(hits.length===1)openPart(hits[0]);else {S.mapCandidates=hits;S.focusCandidates=hits.length>1}
   return render();
  }
- const k=e.target.closest('[data-k]');if(k&&!e.target.closest('.sheet')){S.sel=k.dataset.k;S.mapCandidates=[];return render()}
+ const k=e.target.closest('[data-k]');if(k&&!e.target.closest('.sheet')){openPart(k.dataset.k,k.closest('.map-candidates')?null:k.matches('g[data-k]')?null:`button[data-k="${k.dataset.k}"]`);return render()}
 const a=e.target.closest('[data-a]');if(!a)return;const f=H[a.dataset.a];if(f&&f(a.dataset.v)===false)return;render()});
 document.addEventListener('keydown',e=>{
+ if(e.isComposing||e.keyCode===229)return;
  if(S.sel&&e.key==='Escape'){e.preventDefault();S.sel=null;return render()}
  if(S.sel&&e.key==='Tab'&&typeof document.querySelectorAll==='function'){
   const controls=[...document.querySelectorAll('.sheet button:not(:disabled),.sheet textarea:not(:disabled)')],first=controls[0],last=controls.at(-1);
   if(e.shiftKey&&(e.target===first||e.target.id==='part-title')){e.preventDefault();last?.focus()}else if(!e.shiftKey&&e.target===last){e.preventDefault();first?.focus()}
  }
- if((e.key=='Enter'||e.key==' ')&&e.target.matches('g[data-k]')){e.preventDefault();S.sel=e.target.dataset.k;render()}});
+ if((e.key=='Enter'||e.key==' ')&&e.target.matches('g[data-k]')){e.preventDefault();openPart(e.target.dataset.k);render()}});
 document.addEventListener('input',e=>{const id=e.target.id;if(id.startsWith('share-'))return;if(id=='dt')S.draft.date=e.target.value||today();else if(id=='wo')S.draft.workout=e.target.value;else if(id=='nt')setP(S.sel,d=>{d.n=e.target.value});persist()});
 document.addEventListener('change',e=>{const id=e.target.id,v=e.target.value;
-if(id==='map-part'){if(visibleLocations(S.view).includes(v)){S.sel=v;S.mapCandidates=[];render()}}
+if(id==='map-part'){if(visibleLocations(S.view).includes(v)){openPart(v,'#map-part');render()}}
 else if(id==='share-start'||id==='share-end'||id==='share-text'){if(id==='share-text')S.share.text=e.target.checked;else {const field=id==='share-start'?'start':'end';S.share[field]=v;S.share[field+'Invalid']=!!(e.target.validity&&!e.target.validity.valid)}render()}
 else if(id=='sm'){S.sumId=v;render()}else if(id=='tp'){S.tp=v;render()}
 else if(id=='fi'&&e.target.files[0]){
