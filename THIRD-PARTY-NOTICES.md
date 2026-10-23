@@ -1,6 +1,6 @@
 # 人體圖來源與授權
 
-女性正背面 SVG 與外輪廓衍生自 [HichamELBSI/react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter)，固定來源 `8ed39ac2ae9cb46fb79d77eedec7e5b029a75174` 的 `assets/bodyFemaleFront.ts`、`assets/bodyFemaleBack.ts`、`components/SvgFemaleWrapper.tsx`。本網站調整配色與線條，另繪 H1 短髮與體表位置示意；圖形不是診斷或精確組織邊界。
+女性正背面 SVG 與外輪廓衍生自 [HichamELBSI/react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter)，固定來源 `8ed39ac2ae9cb46fb79d77eedec7e5b029a75174` 的 `assets/bodyFemaleFront.ts`、`assets/bodyFemaleBack.ts`、`components/SvgFemaleWrapper.tsx`。本網站調整配色與線條，另繪盤髮、後腦輪廓與體表位置示意；圖形不是診斷或精確組織邊界。
 
 原始來源檔案與授權保存在 `scripts/source/`。圖形隨本站提供，不載入 React Native，也不向原始專案傳送健康紀錄。以下為 MIT 授權全文：
 
