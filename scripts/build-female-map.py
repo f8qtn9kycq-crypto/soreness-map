@@ -14,11 +14,14 @@ legacy=json.loads((source/'legacy-locations.json').read_text())
 patch_file=source/'label-points.json';patches=json.loads(patch_file.read_text()) if patch_file.exists() else {}
 view_boxes={'F':['-50 -40 734 1538','140 205 360 230','-35 285 710 525','180 295 280 410','175 560 290 500','190 965 260 500'],'B':['756 0 774 1448','960 205 360 230','785 285 710 525','1000 295 280 410','995 560 290 500','1010 965 260 500']}
 def hair(view):
+ # 原創簡潔盤髮：附圖僅為風格參考。背面髮際線在後頸收束，沒有鮑伯凹口。
  dx=0 if view=='F' else 820
- outer=f'M{246+dx} 143q-13 -93 46 -106q58 -17 93 28q24 34 17 91l-1 84q-12 10 -28 8l-6 -53h-97l-3 53q-18 3 -29 -8Z'
- fringe=f'M{246+dx} 143q-16 -90 46 -106q58 -17 93 28q19 27 13 84l-15 4q-8 -26 -14 -50q-39 -13 -69 8q-27 16 -42 21l-5 19Z'
- lines=[f'M{273+dx} 70q-23 53 -23 164',f'M{378+dx} 145l9 89']
- return {'hairBack':outer if view=='F' else '', 'hairFront':fringe if view=='F' else outer,'hairLines':lines}
+ bun=f'M{288+dx} 44C{278+dx} 10 {296+dx} -4 {322+dx} -4C{348+dx} -4 {365+dx} 14 {353+dx} 45Z'
+ cap=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{391+dx} 205Q{385+dx} 228 {367+dx} 237Q{320+dx} 253 {273+dx} 237Q{255+dx} 228 {249+dx} 205Z'
+ fringe=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{383+dx} 147Q{378+dx} 112 {368+dx} 94Q{305+dx} 99 {260+dx} 72Q{251+dx} 102 {257+dx} 145Z'
+ lines=([f'M{274+dx} 61Q{320+dx} 86 {368+dx} 94',f'M{294+dx} 15Q{325+dx} 1 {347+dx} 28'] if view=='F' else [f'M{265+dx} 89Q{320+dx} 157 {378+dx} 87',f'M{277+dx} 69Q{320+dx} 127 {368+dx} 67',f'M{295+dx} 18Q{320+dx} 4 {345+dx} 28'])
+ return {'hairBack':bun,'hairFront':fringe if view=='F' else cap,'hairLines':lines}
+
 views={view:{'viewBox':view_boxes[view][0],'outline':outlines[n],'art':[{'slug':a['slug'],'path':d} for a in models[view] if a['slug']=='head' for paths in a['path'].values() for d in paths],**hair(view)} for n,view in enumerate(['F','B'])}
 def native(view,slug,side):
  # Upstream left/right are screen-side fragments. Convert to the recorder's anatomical side.
