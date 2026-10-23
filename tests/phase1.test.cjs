@@ -22,6 +22,8 @@ function app(initial = {}, fail = () => false, now) {
       createElement(){return {click(){downloads.push(this.download)},remove(){}}},body:{appendChild(){}}},
     FileReader:class {readAsText(file){this.result=file.text;this.onload()}}
   });
+  context.window=context;
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','assets/female-map.js'),'utf8'), context);
   vm.runInContext(source, context);
   return {storage,nodes,events,blobs,downloads,run:code=>vm.runInContext(code,context),
     plain:code=>JSON.parse(JSON.stringify(vm.runInContext(code,context))),

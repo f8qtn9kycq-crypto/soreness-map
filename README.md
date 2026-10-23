@@ -50,3 +50,13 @@
 - [醫療界線](MEDICAL.md)
 
 本機驗證與正式網站／真機驗證應分開記錄；未經實際操作，不宣稱 iOS Safari、Android Chrome 或醫療專業審核通過。
+
+## 女性人體圖（F2＋H1）
+
+使用女性柔和線稿與下巴附近短鮑伯，保留原37類／74左右key、正背面可見性與儲存格式，不新增前後或中央維度，不改寫歷史。同一key若原本出現在正背面，切面仍是同一筆觀察。左右以使用者本人為準：正面右在畫面左，背面右在畫面右。
+
+點圖遇到多個相疊位置時會列出候選；也可直接用「或用清單選擇位置」。圖形未載入時，清單及紀錄／備份功能仍可使用。Enter／Space可開啟圖形位置，Esc關閉編輯面板。小部位、深層肌群附近或中央位置請配合文字與備註，不以圖像判定組織或病因。
+
+[逐項位置對照](docs/female-map-locations.md)、[來源與MIT授權](THIRD-PARTY-NOTICES.md)。`assets/female-map.js` 須與 `index.html` 一起部署；產品仍無套件依賴或建置步驟。`python3 scripts/build-female-map.py` 可從repo內固定來源重建圖形，不需網路。
+
+另執行 `node tests/female-map.test.cjs` 驗證身分／可見性／左右／放大框／清單替代與歷史保真。兩組契約由GitHub Actions於PR及main更新時執行。`tests/geometry-fixture.html` 提供原生SVG命中與多尺寸版面驗證；瀏覽器驗證不等同真機或臨床定位審核。

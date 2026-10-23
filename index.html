@@ -36,8 +36,24 @@ input,textarea,select{font:inherit;width:100%;min-height:48px;border:1px solid v
 .dot{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#111}
 .toast{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:20px}
 small{color:var(--mut)}
+
+/* Artwork is decorative; interactive positions retain the original record keys. */
+.body .art{fill:var(--sil);stroke:var(--mut);stroke-width:1.5;pointer-events:none}
+.body .art.head{fill:var(--sil)}
+.body .outline{fill:var(--sil);stroke:var(--ink);stroke-width:3;pointer-events:none}
+.body .hair{fill:var(--line);stroke:var(--mut);stroke-width:2;pointer-events:none}
+.body .hair-lines{fill:none;stroke:var(--mut);stroke-width:1.5;pointer-events:none}
+.body .map-hit{fill:transparent;stroke:none;vector-effect:non-scaling-stroke;cursor:pointer}
+.body .map-hit.has{fill-opacity:.72;stroke:var(--ink);stroke-width:1}
+.body g[data-k]:hover .map-hit:not(.has),.body g[data-k]:focus-visible .map-hit:not(.has){fill:var(--acc);fill-opacity:.18;stroke:var(--acc);stroke-width:1.5}
+.body g[data-k]:focus-visible{outline:none}
+.body g[data-k]:focus-visible .map-hit{stroke:var(--acc);stroke-width:2}
+.map-list{margin:12px 0}.map-list select{background:var(--card)}
+.map-candidates{border:2px solid var(--acc)}
+button:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 </style></head>
 <body><main id="app"></main>
+<script src="assets/female-map.js"></script>
 <script>
 const FA='M150 152C157 152 164 154 168 160L180 210C176 214 168 214 164 212C158 192 152 172 150 152Z',DL='M144 80C156 78 162 90 161 104C160 112 152 114 146 110C142 100 140 88 144 80Z';
 const Z=[
@@ -78,13 +94,15 @@ const T={zh:{title:'痠痛記錄',muscles:'肌肉與軟組織',joints:'關節與
 en:{title:'Soreness Map',muscles:'Muscles & soft tissues',joints:'Joints & regions',zAll:'Full body',zNeck:'Neck & shoulders',zArm:'Arms',zTorso:'Torso',zHip:'Hip & thigh',zLeg:'Lower leg & foot',rec:'Log',trend:'Trend',sum:'Summary',front:'Front',back:'Back',hint:'Pick a category, then tap a body part (left/right = your own left/right)',date:'Date',workout:'Related workout (optional)',wph:'e.g. Leg day',save:'Save this entry',clear:'Clear',none:'No parts selected yet',sev:'Discomfort level (1–10)',scale:'1–3 mild, 4–6 moderate, 7–10 severe',type:'Type',note:'Note (optional)',done:'Done',sore:'Sore',pain:'Pain',tight:'Tight',sharp:'Sharp',numb:'Numb',L:'Left ',R:'Right ',draft:'Current draft',days:'days',part:'Part',empty:'No entries in this range yet',hist:'History',del:'Delete',cf:'Tap again to delete',exp:'Export',imp:'Import JSON',nodl:'File downloads are unavailable here',shot:'Take a screenshot of this screen to share with your trainer or physical therapist',ok:'Imported',bad:'That file isn’t a valid export',bk:'Data is stored only in this browser on this device. Export a backup regularly.',saved:'Saved',parts:'parts'}};
 Object.assign(T.zh,{clearPart:'清除此部位',locationHint:'記錄感覺位置，不能判定受傷組織。中央或更細的位置請先備註，不需判定病因；分享用 CSV 預設不含備註。',trendHint:'只顯示已記錄部位的分數；空白與舊紀錄的 0 不代表沒有不適。圓點是各次紀錄，未連線，不代表連續量測。',trendEmpty:'這個區間沒有此部位的有效分數紀錄',backup:'完整備份（含訓練文字與備註）',backupHint:'JSON 可還原完整歷史；完整 CSV 供閱讀，不能還原。',shareCSV:'分享用 CSV',shareStart:'起始日期（留空＝不限）',shareEnd:'結束日期（留空＝不限）',shareText:'包含訓練文字與備註（可能含敏感資訊）',shareHint:'僅匯出已儲存的歷史，不含目前草稿；預設排除訓練文字與備註。下載到本機，不會自動上傳 Google；CSV 不能還原，請另存完整 JSON 備份。',shareReady:'可匯出 {entries} 筆紀錄、{rows} 列部位資料',shareInvalid:'請輸入有效日期，且起始日期不可晚於結束日期。',shareEmpty:'所選日期沒有可匯出的部位紀錄。'});
 Object.assign(T.en,{clearPart:'Clear this part',locationHint:'Log where you feel discomfort; this cannot identify injured tissue. Use notes for central or more precise locations without deciding a cause. Share CSV excludes notes by default.',trendHint:'Only recorded scores for this part appear. Missing values and legacy 0 values do not mean no discomfort. Dots are not connected; no continuous measurements are implied.',trendEmpty:'No recorded scores for this part in this range',backup:'Full backup (includes workout text and notes)',backupHint:'JSON restores full history. Full CSV is for reading and cannot restore data.',shareCSV:'Share CSV',shareStart:'Start date (blank = no limit)',shareEnd:'End date (blank = no limit)',shareText:'Include workout text and notes (may contain sensitive information)',shareHint:'Exports saved history only, without the current draft. Workout text and notes are excluded by default. Downloads locally and does not upload to Google. CSV cannot restore data; keep a full JSON backup.',shareReady:'Ready: {entries} entries, {rows} part rows',shareInvalid:'Enter valid dates with the start on or before the end.',shareEmpty:'No part records to export for these dates.'});
+Object.assign(T.zh,{choosePosition:'或用清單選擇位置',mapLabel:'女性人體位置示意',mapUnavailable:'人體圖未載入，請使用位置清單；紀錄與備份功能仍可使用。',candidateTitle:'此處有多個位置，請確認要記錄哪一個',artCredit:'人體圖來源與授權'});
+Object.assign(T.en,{choosePosition:'Or choose a location from the list',mapLabel:'Female body location illustration',mapUnavailable:'The body illustration could not load. Use the location list; logging and backups remain available.',candidateTitle:'Several locations overlap here. Choose the one to record.',artCredit:'Body illustration source and license'});
 const K='bodymap.v1',DK='bodymap.draft',LK='bodymap.lang';
 const ld=(k,d)=>{try{const raw=localStorage.getItem(k);return raw===null?d:JSON.parse(raw)}catch{blockedWrites.add(k);return d}};
 const blockedWrites=new Set(),failedWrites=new Set();
 const sv=(k,v)=>{if(blockedWrites.has(k))return false;try{localStorage.setItem(k,JSON.stringify(v));failedWrites.delete(k);return true}catch{failedWrites.add(k);return false}};
 const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 const newDraft=()=>({date:today(),workout:'',parts:{}});
-const S={lang:ld(LK,(navigator.language||'').startsWith('zh')?'zh':'en')==='en'?'en':'zh',tab:'rec',view:'F',sel:null,draft:ld(DK,newDraft()),entries:ld(K,[]),sumId:'draft',tp:'jKnee.R',layer:'m',zoom:0,range:30,share:{start:'',end:'',text:false},msg:'',cf:null,dl:typeof Blob==='function'&&typeof URL.createObjectURL==='function'};
+const S={lang:ld(LK,(navigator.language||'').startsWith('zh')?'zh':'en')==='en'?'en':'zh',tab:'rec',view:'F',sel:null,draft:ld(DK,newDraft()),entries:ld(K,[]),sumId:'draft',tp:'jKnee.R',layer:'m',zoom:0,range:30,mapCandidates:[],share:{start:'',end:'',text:false},msg:'',cf:null,dl:typeof Blob==='function'&&typeof URL.createObjectURL==='function'};
 const MAP={neck:'jNeck',shoulder:'jShoulder',scapula:'rhomboid',upperBack:'jThoracic',lowerBack:'jLumbar',elbow:'jElbow',hip:'jHip',glute:'gluteMax',thighF:'quads',thighB:'hamstrings',knee:'jKnee',ankle:'jAnkle'};
 const mig=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>{const[p,s]=k.split('.');return[(MAP[p]||p)+'.'+s,v]}));
 // Validate both file imports and persisted data before they reach HTML/SVG rendering.
@@ -126,24 +144,31 @@ function storageWarning(){
 }
 function updateStorageWarning(){const node=document.getElementById('storage-status');if(node)node.innerHTML=storageWarning()}
 const px=(dx,v,s)=>(v=='F')===(s=='R')?100-dx:100+dx;
-const HD='M108 46L108 62C122 65 138 67 149 75C157 80 161 90 161 102C163 122 167 142 171 160C173 178 179 198 184 216C187 226 188 236 184 244C181 252 175 254 172 247C168 238 165 226 162 214C157 196 152 178 149 160C147 146 143 128 140 108C139 124 133 146 131 166C131 182 139 196 141 214C142 244 141 272 138 304C137 316 138 324 137 332C140 350 141 366 137 384C136 392 136 396 135 400C141 402 147 403 146 407L108 407C109 400 110 394 111 386C112 368 113 350 112 336C110 326 108 316 107 306C105 280 103 252 101 226L100 222',MIR='transform="translate(200 0) scale(-1 1)"';
-function sil(){return `<g fill="var(--sil)"><path d="${HD}L100 46Z"/><path ${MIR} d="${HD}L100 46Z"/></g><ellipse cx="100" cy="27" rx="17" ry="22" fill="var(--sil)" stroke="var(--ink)" stroke-width="1.5"/><g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"><path d="${HD}"/><path ${MIR} d="${HD}"/></g>`}
-function body(v,data,tap,vb){let ro='',h='';
-for(const[id,vw,sh,lx,ly]of Z){if(!vw.includes(v))continue;const cur=!tap||(isJ(id)?'j':'m')==S.layer;
-for(const s of['R','L']){const k=id+'.'+s,d=data[k],on=d&&d.s>0;if(!on&&!(tap&&cur))continue;
-const mir=(v=='F')===(s=='R'),e=Array.isArray(sh),ax=e?sh[0]:lx,ay=e?sh[1]:ly,x=mir?200-ax:ax,
-shp=e?`<ellipse cx="${sh[0]}" cy="${sh[1]}" rx="${sh[2]}" ry="${sh[3]}"`:`<path d="${sh}"`,
-el=`${shp} class="p${on?' has':''}"${mir?' '+MIR:''}${on?` style="fill:${col(d.s)}"`:''}/>${on?`<text x="${x}" y="${ay+4}" text-anchor="middle" font-size="12" font-weight="700" fill="#111">${d.s}</text>`:''}`;
-if(tap&&cur)h+=`<g data-k="${k}" tabindex="0" role="button" aria-label="${name(k)}">${el}</g>`;else ro+=`<g class="ro">${el}</g>`}}
-return `<svg class="body" viewBox="${vb||'0 0 200 410'}">${sil()}${ro}${h}</svg>`}
+const femaleMap=typeof window!=='undefined'?window.FEMALE_MAP:null;
+const mapAvailable=!!(femaleMap&&femaleMap.views&&Array.isArray(femaleMap.locations));
+const visibleLocations=(v,layer=S.layer)=>Z.filter(z=>z[1].includes(v)&&(isJ(z[0])?'j':'m')===layer).flatMap(z=>['R','L'].map(side=>z[0]+'.'+side));
+function locationChoices(){const keys=visibleLocations(S.view);
+return `<div class="map-list"><label for="map-part">${i('choosePosition')}</label><select id="map-part"><option value="">${i('choosePosition')}</option>${keys.map(k=>`<option value="${k}">${name(k)}${S.draft.parts[k]?.s>0?' · '+S.draft.parts[k].s+'/10':''}</option>`).join('')}</select></div>`}
+function body(v,data,tap){
+ if(!mapAvailable)return `<p role="status" class="mut">${i('mapUnavailable')}</p>`;
+ const view=femaleMap.views[v],locations=femaleMap.locations.filter(p=>p.view===v);
+ const decoration=`<path class="outline" d="${view.outline}"/>${view.hairBack?`<path class="hair" d="${view.hairBack}"/>`:''}${view.art.map(a=>`<path class="art ${a.slug==='head'?'head':''}" d="${a.path}"/>`).join('')}${view.hairFront?`<path class="hair" d="${view.hairFront}"/>`:''}${(view.hairLines||[]).map(d=>`<path class="hair-lines" d="${d}"/>`).join('')}`;
+ const regions=locations.map(p=>{const k=p.id+'.'+p.side,d=data[k],on=d&&d.s>0,cur=tap&&(isJ(p.id)?'j':'m')===S.layer;if(!on&&!cur)return '';
+ const attrs=cur?`data-k="${k}" data-location="${k}" tabindex="0" role="button" aria-label="${name(k)}${on?' '+d.s+'/10':''}"`:'class="ro"';
+ return `<g ${attrs}><path class="map-hit${on?' has':''}"${cur?' data-hit="true"':''} d="${p.path}"${on?` style="fill:${col(d.s)}"`:''}/>${on?`<text x="${p.labelPoint[0]}" y="${p.labelPoint[1]}" text-anchor="middle" dominant-baseline="middle" font-size="30" font-weight="700" fill="#111" stroke="#fff" stroke-width="1" paint-order="stroke" pointer-events="none">${d.s}</text>`:''}</g>`;
+ }).join('');
+ const sides=(!tap||S.zoom===0)?['R','L'].map(side=>`<text x="${(v==='F'?320:1140)+((v==='F')===(side==='R')?-220:220)}" y="80" text-anchor="middle" font-size="28" fill="var(--mut)" pointer-events="none">${i(side)}</text>`).join(''):'';
+ return `<svg class="body" data-map="${v}" viewBox="${tap?femaleMap.zooms[v][S.zoom]:view.viewBox}" role="group" aria-label="${i(v==='F'?'front':'back')} · ${i('mapLabel')}">${decoration}${regions}${sides}</svg>`;
+}
+function mapCandidates(){const keys=S.mapCandidates.filter(k=>visibleLocations(S.view).includes(k));return keys.length>1?`<div class="card map-candidates" role="group" aria-label="${i('candidateTitle')}"><p role="status">${i('candidateTitle')}</p><div class="chips">${keys.map(k=>`<button data-k="${k}">${name(k)}</button>`).join('')}</div></div>`:''}
 const active=o=>Object.entries(o).filter(([,d])=>d.s>0).sort((a,b)=>b[1].s-a[1].s);
 function rec(){const a=active(S.draft.parts);
-return `<div class="seg">${['F','B'].map(v=>`<button data-a="view" data-v="${v}" class="${S.view==v?'on':''}">${i(v=='F'?'front':'back')}</button>`).join('')}</div><div class="seg" style="margin-top:8px">${[['m','muscles'],['j','joints']].map(([v,l])=>`<button data-a="layer" data-v="${v}" class="${S.layer==v?'on':''}">${i(l)}</button>`).join('')}</div><div class="chips">${ZM.map((z,n)=>`<button data-a="zoom" data-v="${n}" class="${S.zoom==n?'on':''}">${i(z[1])}</button>`).join('')}</div><p class="mut">${i('hint')}</p><p class="mut">${i('locationHint')}</p>${body(S.view,S.draft.parts,1,ZM[S.zoom][0])}
+return `<div class="seg">${['F','B'].map(v=>`<button data-a="view" data-v="${v}" class="${S.view==v?'on':''}">${i(v=='F'?'front':'back')}</button>`).join('')}</div><div class="seg" style="margin-top:8px">${[['m','muscles'],['j','joints']].map(([v,l])=>`<button data-a="layer" data-v="${v}" class="${S.layer==v?'on':''}">${i(l)}</button>`).join('')}</div><div class="chips">${ZM.map((z,n)=>`<button data-a="zoom" data-v="${n}" class="${S.zoom==n?'on':''}">${i(z[1])}</button>`).join('')}</div><p class="mut">${i('hint')}</p><p class="mut">${i('locationHint')}</p>${locationChoices()}${mapCandidates()}${body(S.view,S.draft.parts,1)}<p class="mut" style="font-size:12px"><a href="THIRD-PARTY-NOTICES.md" style="color:var(--acc)">${i('artCredit')}</a></p>
 <div class="chips">${a.length?a.map(([k,d])=>`<button data-k="${k}" style="border-left:8px solid ${col(d.s)}">${name(k)} ${d.s}/10</button>`).join(''):`<span class="mut">${i('none')}</span>`}</div>
 <div class="card"><label>${i('date')}</label><input type="date" id="dt" value="${S.draft.date}"><label>${i('workout')}</label><input id="wo" placeholder="${i('wph')}" value="${esc(S.draft.workout)}"></div>
 <div class="row"><button class="pri" data-a="save" style="flex:2">${i('save')}</button><button data-a="clr" style="flex:1">${i('clear')}</button></div><p class="mut">${i('bk')}</p>`}
 function sheet(){const k=S.sel,d=S.draft.parts[k]||{s:0,t:[],n:''},z=d.s>0;
-return `<div class="veil" data-a="close"></div><div class="sheet"><h2>${name(k)}</h2><p>${i('sev')}<br><small>${i('scale')}</small></p>
+return `<div class="veil" data-a="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="part-title"><h2 id="part-title" tabindex="-1">${name(k)}</h2><p>${i('sev')}<br><small>${i('scale')}</small></p>
 <div class="sev">${Array.from({length:10},(_,n)=>n+1).map(n=>`<button data-a="sev" data-v="${n}" class="${d.s==n?'on':''}" style="${n?`border-bottom:5px solid ${col(n)}`:''}">${n}</button>`).join('')}<button data-a="sev" data-v="0" style="grid-column:1/-1;font-weight:400">${i('clearPart')}</button></div>
 <p>${i('type')}</p><div class="chips">${TY.map(y=>`<button data-a="ty" data-v="${y}" ${z?'':'disabled'} class="${d.t.includes(y)?'on':''}">${i(y)}</button>`).join('')}</div>
 <p>${i('note')}</p><textarea id="nt" rows="2" ${z?'':'disabled'}>${esc(d.n)}</textarea><button class="pri" data-a="close" style="width:100%;margin-top:12px">${i('done')}</button></div>`}
@@ -174,8 +199,11 @@ function shareExport(entries,options,lang){
 function sharePanel(){const result=shareExport(S.entries,S.share,S.lang),message=result.error?i(result.error):i('shareReady').replace('{entries}',result.entries).replace('{rows}',result.rows.length-1);
  return `<div class="card"><b>${i('shareCSV')}</b><p class="mut">${i('shareHint')}</p><label for="share-start">${i('shareStart')}</label><input id="share-start" type="date" value="${esc(S.share.start)}"><label for="share-end">${i('shareEnd')}</label><input id="share-end" type="date" value="${esc(S.share.end)}"><label style="display:flex;align-items:center;gap:8px"><input id="share-text" type="checkbox" style="width:22px;min-height:22px;flex:none" ${S.share.text?'checked':''}>${i('shareText')}</label><p id="share-preview" class="mut" aria-live="polite">${message}</p>${S.dl?`<button data-a="exs" ${result.error?'disabled':''}>${i('exp')} ${i('shareCSV')}</button>`:`<p class="mut">${i('nodl')}</p>`}</div>`;
 }
-function render(){const v={rec,trend,sum}[S.tab]();document.documentElement.lang=S.lang=='zh'?'zh-Hant':'en';
-document.getElementById('app').innerHTML=(S.msg?`<div class="toast">${S.msg}</div>`:'')+`<div class="top"><h1>${i('title')}</h1><button data-a="lang">${S.lang=='zh'?'EN':'中文'}</button></div>`+`<p class="mut" style="font-size:12px">資料留在此瀏覽器，匯出檔案由你保管。本工具僅供記錄，非診斷或治療建議。<br>Data stays in this browser; you control exported files. For logging only; not diagnosis or treatment advice.</p>`+`<div id="storage-status">${storageWarning()}</div>`+v+`<nav>${['rec','trend','sum'].map(t=>`<button data-a="tab" data-v="${t}" class="${S.tab==t?'on':''}">${i(t)}</button>`).join('')}</nav>`+(S.sel?sheet():'')}
+function render(){const focused=document.activeElement,wasSheet=!!(focused&&focused.closest('.sheet')),focusAction=wasSheet?focused.dataset?.a:null,focusValue=wasSheet?focused.dataset?.v:null;const v={rec,trend,sum}[S.tab]();document.documentElement.lang=S.lang=='zh'?'zh-Hant':'en';
+document.getElementById('app').innerHTML=`<div id="page-content"${S.sel?' inert':''}>`+(S.msg?`<div class="toast">${S.msg}</div>`:'')+`<div class="top"><h1>${i('title')}</h1><button data-a="lang">${S.lang=='zh'?'EN':'中文'}</button></div>`+`<p class="mut" style="font-size:12px">資料留在此瀏覽器，匯出檔案由你保管。本工具僅供記錄，非診斷或治療建議。<br>Data stays in this browser; you control exported files. For logging only; not diagnosis or treatment advice.</p>`+`<div id="storage-status">${storageWarning()}</div>`+v+`<nav>${['rec','trend','sum'].map(t=>`<button data-a="tab" data-v="${t}" class="${S.tab==t?'on':''}">${i(t)}</button>`).join('')}</nav>`+'</div>'+(S.sel?sheet():'');
+ if(typeof document.querySelector==='function'){if(S.sel){const selector=focusAction?`.sheet [data-a="${focusAction}"]${focusValue!==undefined?`[data-v="${focusValue}"]`:''}`:'#part-title';(document.querySelector(selector)||document.getElementById('part-title'))?.focus()}else if(wasSheet)document.getElementById('map-part')?.focus()}
+}
+
 function toast(m){S.msg=m;render();setTimeout(()=>{S.msg='';render()},2200)}
 function setP(k,f){const d=S.draft.parts[k]||(S.draft.parts[k]={s:0,t:[],n:''});f(d);if(!d.s)delete S.draft.parts[k];persist()}
 const csvCell=value=>{let text=String(value);if(/^[\s\uFEFF]*[=+@-]|^[\t\r\n]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'};
@@ -190,7 +218,7 @@ try{
  const anchor=document.createElement('a');anchor.href=url;anchor.download=fn;document.body.appendChild(anchor);
  try{anchor.click()}finally{anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 }catch{toast(i('nodl'))}}
-const H={view:v=>S.view=v,layer:v=>S.layer=v,zoom:v=>S.zoom=+v,tab:v=>S.tab=v,close:()=>S.sel=null,lang:()=>{S.lang=S.lang=='zh'?'en':'zh';sv(LK,S.lang)},rg:v=>S.range=+v,
+const H={view:v=>{S.view=v;S.mapCandidates=[]},layer:v=>{S.layer=v;S.mapCandidates=[]},zoom:v=>{S.zoom=+v;S.mapCandidates=[]},tab:v=>S.tab=v,close:()=>S.sel=null,lang:()=>{S.lang=S.lang=='zh'?'en':'zh';sv(LK,S.lang)},rg:v=>S.range=+v,
 sev:v=>setP(S.sel,d=>{d.s=+v}),ty:v=>setP(S.sel,d=>{d.t=d.t.includes(v)?d.t.filter(x=>x!=v):[...d.t,v]}),
 clr:()=>{S.draft=newDraft();persist()},
 save(){const parts=Object.fromEntries(active(S.draft.parts));if(!Object.keys(parts).length)return toast(i('none'));
@@ -199,12 +227,28 @@ if(!sv(K,entries)){sv(DK,S.draft);return toast('尚未儲存；草稿已保留�
 S.entries=entries;S.draft=newDraft();S.sumId=e.id;S.tab='sum';const draftSaved=sv(DK,S.draft);toast(draftSaved?i('saved'):'紀錄已儲存，但舊草稿未能清除，重開頁面可能再次出現。 / Entry saved, but the old draft could not be cleared and may reappear after reload.')},
 del(v){if(S.cf!=v){S.cf=v;return}S.entries=S.entries.filter(e=>e.id!=v);S.cf=null;persist()},
 exs:()=>{exp('s');return false},exj:()=>{exp('j');return false},exd:()=>{exp('d');return false},exc:()=>{exp('c');return false},imp:()=>{document.getElementById('fi').click();return false}};
-document.addEventListener('click',e=>{const k=e.target.closest('[data-k]');if(k&&!e.target.closest('.sheet')){S.sel=k.dataset.k;return render()}
+document.addEventListener('click',e=>{
+ const svg=e.target.closest('svg[data-map]');
+ if(svg&&S.tab==='rec'&&!S.sel&&e.detail!==0){
+  const matrix=svg.getScreenCTM();if(!matrix)return;
+  const point=svg.createSVGPoint();point.x=e.clientX;point.y=e.clientY;const local=point.matrixTransform(matrix.inverse());
+  const hits=[...svg.querySelectorAll('g[data-location]')].filter(g=>g.querySelector('[data-hit]').isPointInFill(local)).map(g=>g.dataset.location);
+  if(hits.length===1){S.sel=hits[0];S.mapCandidates=[]}else S.mapCandidates=hits;
+  return render();
+ }
+ const k=e.target.closest('[data-k]');if(k&&!e.target.closest('.sheet')){S.sel=k.dataset.k;S.mapCandidates=[];return render()}
 const a=e.target.closest('[data-a]');if(!a)return;const f=H[a.dataset.a];if(f&&f(a.dataset.v)===false)return;render()});
-document.addEventListener('keydown',e=>{if((e.key=='Enter'||e.key==' ')&&e.target.matches('g[data-k]')){e.preventDefault();S.sel=e.target.dataset.k;render()}});
+document.addEventListener('keydown',e=>{
+ if(S.sel&&e.key==='Escape'){e.preventDefault();S.sel=null;return render()}
+ if(S.sel&&e.key==='Tab'&&typeof document.querySelectorAll==='function'){
+  const controls=[...document.querySelectorAll('.sheet button:not(:disabled),.sheet textarea:not(:disabled)')],first=controls[0],last=controls.at(-1);
+  if(e.shiftKey&&(e.target===first||e.target.id==='part-title')){e.preventDefault();last?.focus()}else if(!e.shiftKey&&e.target===last){e.preventDefault();first?.focus()}
+ }
+ if((e.key=='Enter'||e.key==' ')&&e.target.matches('g[data-k]')){e.preventDefault();S.sel=e.target.dataset.k;render()}});
 document.addEventListener('input',e=>{const id=e.target.id;if(id.startsWith('share-'))return;if(id=='dt')S.draft.date=e.target.value||today();else if(id=='wo')S.draft.workout=e.target.value;else if(id=='nt')setP(S.sel,d=>{d.n=e.target.value});persist()});
 document.addEventListener('change',e=>{const id=e.target.id,v=e.target.value;
-if(id==='share-start'||id==='share-end'||id==='share-text'){if(id==='share-text')S.share.text=e.target.checked;else {const field=id==='share-start'?'start':'end';S.share[field]=v;S.share[field+'Invalid']=!!(e.target.validity&&!e.target.validity.valid)}render()}
+if(id==='map-part'){if(visibleLocations(S.view).includes(v)){S.sel=v;S.mapCandidates=[];render()}}
+else if(id==='share-start'||id==='share-end'||id==='share-text'){if(id==='share-text')S.share.text=e.target.checked;else {const field=id==='share-start'?'start':'end';S.share[field]=v;S.share[field+'Invalid']=!!(e.target.validity&&!e.target.validity.valid)}render()}
 else if(id=='sm'){S.sumId=v;render()}else if(id=='tp'){S.tp=v;render()}
 else if(id=='fi'&&e.target.files[0]){
  const file=e.target.files[0];e.target.value='';

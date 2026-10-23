@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>女性圖形原生驗證</title><h1>原生 SVG／版面驗證</h1><p>測試只切換圖形顯示，不變更紀錄。</p><pre id="result" role="status">Running…</pre><div id="frames"></div><script src="../assets/female-map.js"></script><script>
+(async()=>{const map=window.FEMALE_MAP,misses=[],invalid=[],ns='http://www.w3.org/2000/svg';
+const svg=document.createElementNS(ns,'svg');svg.setAttribute('width','1');svg.setAttribute('height','1');document.body.append(svg);
+for(const p of map.locations){const path=document.createElementNS(ns,'path');path.setAttribute('d',p.path);svg.append(path);const point=new DOMPoint(...p.labelPoint);
+ if(!path.isPointInFill(point)){let best=null,box=path.getBBox();
+ for(const margin of [10,6,2,0]){for(let x=box.x;x<=box.x+box.width;x+=3)for(let y=box.y;y<=box.y+box.height;y+=3){if(![[0,0],[margin,0],[-margin,0],[0,margin],[0,-margin]].every(([dx,dy])=>path.isPointInFill(new DOMPoint(x+dx,y+dy))))continue;const distance=(x-p.labelPoint[0])**2+(y-p.labelPoint[1])**2;if(!best||distance<best.distance)best={point:[Math.round(x*10)/10,Math.round(y*10)/10],distance,margin}}if(best)break}
+ misses.push({key:p.view+':'+p.id+'.'+p.side,seed:p.labelPoint,suggested:best});
+ }
+ if(!Number.isFinite(path.getTotalLength())||path.getTotalLength()<=0)invalid.push(p.view+':'+p.id+'.'+p.side);path.remove();
+}
+const overlaps=[];
+for(const view of ['F','B'])for(const joint of [false,true]){
+ const list=map.locations.filter(p=>p.view===view&&p.id.startsWith('j')===joint).map(p=>{const shape=document.createElementNS(ns,'path');shape.setAttribute('d',p.path);svg.append(shape);return {p,shape}});
+ for(const a of list){const point=new DOMPoint(...a.p.labelPoint),hits=list.filter(b=>b.shape.isPointInFill(point)).map(b=>b.p.id+'.'+b.p.side);if(hits.length>1){overlaps.push({view,layer:joint?'j':'m',point:a.p.labelPoint,hits});break}}
+ list.forEach(a=>a.shape.remove());
+}
+const layouts=[];
+for(const width of [320,375,390,1280])for(const theme of ['light','dark']){
+ const f=document.createElement('iframe');f.title=width+' '+theme;f.width=width;f.height=900;document.getElementById('frames').append(f);await new Promise(resolve=>{f.onload=resolve;f.src='../index.html'});const d=f.contentDocument;d.documentElement.dataset.theme=theme;
+ for(const view of ['F','B']){d.querySelector(`[data-a="view"][data-v="${view}"]`).click();for(const zoom of [0,1,2,3,4,5]){d.querySelector(`[data-a="zoom"][data-v="${zoom}"]`).click();layouts.push({width,theme,view,zoom,overflow:d.documentElement.scrollWidth>width,selectHeight:d.getElementById('map-part').getBoundingClientRect().height})}}f.remove();
+}
+const result={overlaps,locations:map.locations.length,misses,invalid,layouts:layouts.length,layoutFailures:layouts.filter(x=>x.overflow||x.selectHeight<44)};document.getElementById('result').textContent=JSON.stringify(result,null,2);document.title=misses.length||invalid.length||result.layoutFailures.length?'Geometry: NEEDS FIX':'Geometry: PASS';
+})();</script>
