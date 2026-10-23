@@ -10,6 +10,10 @@ def read_model(filename):
  return json.loads(re.sub(r',\s*([}\]])',r'\1','['+s+']'))
 models={'F':read_model('assets_bodyFemaleFront.ts'),'B':read_model('assets_bodyFemaleBack.ts')}
 outlines=re.findall(r'\bd="([^"]+)"',(source/'components_SvgFemaleWrapper.tsx').read_text())
+# 背面來源只有軀幹上緣的封口；以連續後腦輪廓取代該橫線，頸部以下路徑不變。
+neck_end='0.031,-0.22254'
+assert neck_end in outlines[1]
+outlines[1]=outlines[1].split(neck_end,1)[0].rstrip().removesuffix('c').rstrip()+' C1098 224 1084 209 1080 190 C1060 130 1068 70 1098 45 C1120 20 1160 20 1182 45 C1212 70 1220 130 1200 190 C1198 196 1196 202 1194.44 206.54 Z'
 legacy=json.loads((source/'legacy-locations.json').read_text())
 patch_file=source/'label-points.json';patches=json.loads(patch_file.read_text()) if patch_file.exists() else {}
 view_boxes={'F':['-50 -40 734 1538','140 205 360 230','-35 285 710 525','180 295 280 410','175 560 290 500','190 965 260 500'],'B':['756 0 774 1448','960 205 360 230','785 285 710 525','1000 295 280 410','995 560 290 500','1010 965 260 500']}
@@ -17,7 +21,7 @@ def hair(view):
  # 原創簡潔盤髮：附圖僅為風格參考。背面髮際線在後頸收束，沒有鮑伯凹口。
  dx=0 if view=='F' else 820
  bun=f'M{288+dx} 44C{278+dx} 10 {296+dx} -4 {322+dx} -4C{348+dx} -4 {365+dx} 14 {353+dx} 45Z'
- cap=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{391+dx} 205Q{385+dx} 228 {367+dx} 237Q{320+dx} 253 {273+dx} 237Q{255+dx} 228 {249+dx} 205Z'
+ cap=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{389+dx} 164Q{374+dx} 192 {350+dx} 195Q{320+dx} 222 {290+dx} 195Q{266+dx} 192 {251+dx} 164Z'
  fringe=f'M{246+dx} 144C{234+dx} 65 {265+dx} 29 {320+dx} 29C{375+dx} 29 {405+dx} 67 {395+dx} 145L{383+dx} 147Q{378+dx} 112 {368+dx} 94Q{305+dx} 99 {260+dx} 72Q{251+dx} 102 {257+dx} 145Z'
  lines=([f'M{274+dx} 61Q{320+dx} 86 {368+dx} 94',f'M{294+dx} 15Q{325+dx} 1 {347+dx} 28'] if view=='F' else [f'M{265+dx} 89Q{320+dx} 157 {378+dx} 87',f'M{277+dx} 69Q{320+dx} 127 {368+dx} 67',f'M{295+dx} 18Q{320+dx} 4 {345+dx} 28'])
  return {'hairBack':bun,'hairFront':fringe if view=='F' else cap,'hairLines':lines}
