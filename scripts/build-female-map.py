@@ -10,16 +10,69 @@ def read_model(filename):
  return json.loads(re.sub(r',\s*([}\]])',r'\1','['+s+']'))
 models={'F':read_model('assets_bodyFemaleFront.ts'),'B':read_model('assets_bodyFemaleBack.ts')}
 outlines=re.findall(r'\bd="([^"]+)"',(source/'components_SvgFemaleWrapper.tsx').read_text())
+# 已確認的 C 成對頭頸與盤髮；肩膀以下保留固定來源曲線。
+def segments(s):
+    tokens = list(re.finditer(r'[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?', s))
+    x = y = 0
+    i = 0
+    command = ''
+    result = []
+    while i < len(tokens):
+        if tokens[i][0].isalpha():
+            command = tokens[i][0]
+            i += 1
+        if command == 'z':
+            break
+        count = {'m': 2, 'c': 6, 'l': 2, 'h': 1, 'v': 1, 'H': 1, 'V': 1}[command]
+        start = tokens[i].start()
+        nums = [float(t[0]) for t in tokens[i:i+count]]
+        i += count
+        if command in ('m', 'c', 'l'):
+            x += nums[-2]
+            y += nums[-1]
+        elif command == 'h':
+            x += nums[-1]
+        elif command == 'v':
+            y += nums[-1]
+        elif command == 'H':
+            x = nums[-1]
+        elif command == 'V':
+            y = nums[-1]
+        result.append((start, x, y))
+        if command == 'm':
+            command = 'l'
+    return result
+
+f = segments(outlines[0])
+b = segments(outlines[1])
+assert abs(f[4][1]-353.24) < .001 and abs(f[237][1]-287.63) < .001
+assert abs(b[3][1]-1175.41) < .001
+b_end = next(i for i, (start, x, y) in enumerate(b) if outlines[1][start:].startswith('0.031,-0.22254'))
+assert abs(b[b_end-1][1]-1109.73) < .001
+body_f = 'M353.24 235.51 c ' + outlines[0][f[5][0]:f[238][0]].rstrip()
+body_b = 'M1175.41 235.17 c ' + outlines[1][b[4][0]:b[b_end][0]].rstrip()
+# Existing body/shoulder curves are copied unchanged between the neck-root anchors.
+head_f = ' C288 223 286 214 278 205 C267 191 262 176 260 159 C252 163 248 158 248 150 C246 138 250 131 257 135 C254 90 272 48 320 45 C368 48 386 90 383 135 C390 131 394 138 392 150 C392 158 388 163 380 159 C378 178 373 192 362 205 C355 214 352 223 353.24 235.51 Z'
+head_b = ' C1110 216 1105 200 1098 191 C1086 181 1080 166 1079 151 C1071 153 1067 145 1069 135 C1070 128 1073 127 1077 132 C1076 90 1094 48 1140 45 C1186 48 1204 90 1203 132 C1207 127 1210 128 1211 135 C1213 145 1209 153 1201 151 C1200 168 1193 183 1182 194 C1176 205 1174 221 1175.41 235.17 Z'
+front_bun = 'M289 46 C289 31 302 22 320 22 C339 22 353 32 354 46 Z'
+hair_f = 'M257 135 C250 85 272 42 320 42 C368 42 390 85 383 135 L375 134 Q374 113 368 103 C340 101 302 92 276 75 Q264 100 265 137 Z'
+hair_b = 'M1077 132 C1074 89 1093 42 1140 42 C1187 42 1206 89 1203 132 C1200 166 1187 192 1165 211 C1156 209 1148 204 1140 204 C1132 204 1124 209 1115 211 C1093 192 1080 166 1077 132 Z'
+bun = 'M1095 99 C1090 64 1109 44 1139 46 C1170 44 1188 64 1184 96 C1180 132 1159 151 1137 149 C1114 148 1100 129 1095 99 Z'
+front_lines = ['M286 61 C310 82 337 96 366 101', 'M301 54 C325 68 352 90 369 96', 'M282 69 C303 85 328 95 352 98', 'M301 34 Q320 22 342 39']
+back_lines = ['M1106 95 C1099 71 1115 51 1137 52 C1160 50 1177 69 1173 93 C1170 119 1152 137 1136 135', 'M1120 99 C1108 83 1122 61 1140 61 C1161 60 1166 84 1153 100', 'M1083 136 Q1101 168 1122 179', 'M1097 175 Q1105 192 1118 202', 'M1197 136 Q1179 168 1158 179', 'M1183 175 Q1175 192 1162 202', 'M1130 153 Q1134 178 1125 198', 'M1150 153 Q1146 178 1155 198']
+chin = 'M278 205 C293 225 307 231 320 231 C333 231 347 225 362 205'
+
+outlines=[body_f+head_f,body_b+head_b]
 legacy=json.loads((source/'legacy-locations.json').read_text())
 patch_file=source/'label-points.json';patches=json.loads(patch_file.read_text()) if patch_file.exists() else {}
 view_boxes={'F':['-50 -40 734 1538','140 205 360 230','-35 285 710 525','180 295 280 410','175 560 290 500','190 965 260 500'],'B':['756 0 774 1448','960 205 360 230','785 285 710 525','1000 295 280 410','995 560 290 500','1010 965 260 500']}
 def hair(view):
- dx=0 if view=='F' else 820
- outer=f'M{246+dx} 143q-13 -93 46 -106q58 -17 93 28q24 34 17 91l-1 84q-12 10 -28 8l-6 -53h-97l-3 53q-18 3 -29 -8Z'
- fringe=f'M{246+dx} 143q-16 -90 46 -106q58 -17 93 28q19 27 13 84l-15 4q-8 -26 -14 -50q-39 -13 -69 8q-27 16 -42 21l-5 19Z'
- lines=[f'M{273+dx} 70q-23 53 -23 164',f'M{378+dx} 145l9 89']
- return {'hairBack':outer if view=='F' else '', 'hairFront':fringe if view=='F' else outer,'hairLines':lines}
-views={view:{'viewBox':view_boxes[view][0],'outline':outlines[n],'art':[{'slug':a['slug'],'path':d} for a in models[view] if a['slug']=='head' for paths in a['path'].values() for d in paths],**hair(view)} for n,view in enumerate(['F','B'])}
+ if view=='F':
+  return {'hairBack':front_bun,'hairFront':hair_f,'hairLines':front_lines}
+ return {'hairBack':'','hairFront':hair_b+' '+bun,'hairLines':back_lines}
+
+views={view:{'viewBox':view_boxes[view][0],'outline':outlines[n],'art':([{'slug':'head','path':chin}] if view=='F' else []),**hair(view)} for n,view in enumerate(['F','B'])}
+
 def native(view,slug,side):
  # Upstream left/right are screen-side fragments. Convert to the recorder's anatomical side.
  src='left' if (view=='F')==(side=='R') else 'right'
@@ -75,7 +128,7 @@ for z in legacy['Z']:
  name=legacy['N'][id][0];ref=' / '.join(f"{v}:{slugs[v,id][0] if (v,id) in slugs else '自繪體表示意'}" for v in ['F','B'] if v in visible)
  rows.append(f'| `{id}` | {name} | {visible} | {ref} |')
 output={'source':{'repo':'https://github.com/HichamELBSI/react-native-body-highlighter','sha':SHA,'license':(source/'LICENSE').read_text()},'views':views,'locations':locations,'zooms':view_boxes}
-(root/'assets/female-map.js').write_text('// F2 + H1. Generated by scripts/build-female-map.py. MIT notice embedded below.\nwindow.FEMALE_MAP = '+json.dumps(output,ensure_ascii=False,indent=2)+';\n')
+(root/'assets/female-map.js').write_text('// F2 + C paired head and reference bun. Generated by scripts/build-female-map.py. MIT notice embedded below.\nwindow.FEMALE_MAP = '+json.dumps(output,ensure_ascii=False,indent=2)+';\n')
 doc='''# 女性人體圖與既有位置對照
 
 固定來源：`8ed39ac2ae9cb46fb79d77eedec7e5b029a75174`。37類／74左右key保持不變；依原本可見性共92個位置（正面44、背面48）。F/B共用key仍為同一觀察，不增加前後維度或改寫歷史。
@@ -92,7 +145,7 @@ doc='''# 女性人體圖與既有位置對照
 
 `python3 scripts/build-female-map.py` 從已固定的來源資產、舊位置定義與標示點修正檔產生圖形；不需網路。`scripts/source/label-points.json` 是瀏覽器原生 SVG 命中驗證後的分數標示點，只改顯示位置，不代表專業臨床校準。原生驗證亦不能證明位置的醫療正確性。
 
-37個舊位置全部保留且各側可用文字清單選取。細碎或相疊熱區會提供候選，避免由頂層圖形任意決定。H1髮型為裝飾，不參與點選命中，頸肩高亮放在其上方。圖形來源MIT授權見 `THIRD-PARTY-NOTICES.md`。
+37個舊位置全部保留且各側可用文字清單選取。細碎或相疊熱區會提供候選，避免由頂層圖形任意決定。C版頭頸盤髮為裝飾，不參與點選命中，頸肩高亮放在其上方。圖形來源MIT授權見 `THIRD-PARTY-NOTICES.md`。
 '''
 (root/'docs/female-map-locations.md').write_text(doc)
 print(f'{len(locations)} locations; {len({p["id"]+"."+p["side"] for p in locations})} unique keys')
