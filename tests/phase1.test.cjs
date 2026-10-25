@@ -64,9 +64,27 @@ test('1–10 意義保留；清除此部位只移除草稿且不改歷史', () =
   const a=history(),before=a.plain('S.entries');
   a.run('S.sel="jKnee.R";S.draft.parts["jKnee.R"]={s:4,t:["pain"],n:"draft"}');
   const html=a.run('sheet()');assert.match(html,/data-v="0"[^>]*>清除此部位/);
-  for(let n=1;n<=10;n++)assert.match(html,new RegExp(`data-v="${n}"`));
+  assert.match(html,/type="range"[^>]*min="1" max="10" step="1"/);
+  for(let n=1;n<=10;n++){a.events.input({target:{id:"severity-slider",value:String(n)}});assert.equal(a.run('S.draft.parts["jKnee.R"].s'),n)}
   a.run('H.sev("0")');assert.deepEqual(a.plain('S.draft.parts'),{});assert.deepEqual(a.plain('S.entries'),before);
   assert.deepEqual(JSON.parse(a.storage['bodymap.v1']),before);
+});
+test('滑桿未操作不記錄；逐格調整保留DOM、備註與歷史，鍵盤與邊界可用', () => {
+ const a=history(),before=a.plain('S.entries');a.run('S.sel="jKnee.R"');
+ assert.match(a.run('sheet()'),/尚未評分/);assert.deepEqual(a.plain('S.draft.parts'),{});
+ a.run('H.stepSev("-1")');assert.deepEqual(a.plain('S.draft.parts'),{});
+ const markup=a.nodes.app.innerHTML;
+ a.events.pointerup({target:{id:'severity-slider',value:'1'}});assert.equal(a.run('S.draft.parts["jKnee.R"].s'),1);
+ a.run('S.draft.parts["jKnee.R"].n="保留備註";S.draft.parts["jKnee.R"].t=["tight"]');
+ for(const value of ['0','11','2.5','oops'])a.events.input({target:{id:'severity-slider',value}});
+ assert.equal(a.run('S.draft.parts["jKnee.R"].s'),1);
+ a.run('H.stepSev("1")');assert.equal(a.run('S.draft.parts["jKnee.R"].s'),2);
+ for(const [key,score] of [['End',10],['ArrowRight',10],['ArrowLeft',9],['Home',1],['ArrowDown',1]]){
+  a.events.keydown({target:{id:'severity-slider'},key,preventDefault(){}});assert.equal(a.run('S.draft.parts["jKnee.R"].s'),score);
+ }
+ assert.equal(a.nodes.app.innerHTML,markup);assert.equal(a.run('S.draft.parts["jKnee.R"].n'),'保留備註');
+ assert.deepEqual(a.plain('S.entries'),before);assert.equal(JSON.parse(a.storage['bodymap.draft']).parts['jKnee.R'].s,1);
+ a.run('S.lang="en"');assert.match(a.run('sheet()'),/1\/10 · Mild/);
 });
 test('37 個穩定部位、左右 key、storage key 與舊名稱匯入相容', () => {
   const a=history(),ids=['scm','traps','chest','deltoid','biceps','forearmF','abs','obliques','hipFlexor','quads','adductors','itBand','shin','rhomboid','lats','erector','rearDelt','rotator','triceps','forearmE','gluteMax','gluteMed','hamstrings','calf','achilles','jNeck','jShoulder','jElbow','jWrist','jHand','jThoracic','jLumbar','jSI','jHip','jKnee','jAnkle','jFoot'];
