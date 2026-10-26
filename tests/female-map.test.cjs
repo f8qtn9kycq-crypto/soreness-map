@@ -1,7 +1,7 @@
 // 真實頁面＋圖形的零依賴契約；醫療正確性及像素命中另行驗證。
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..'),asset=fs.readFileSync(path.join(root,'assets/female-map.js'),'utf8');
-const source=fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
+const source=fs.readFileSync(path.join(root,'legacy.html'),'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
 const baseline=JSON.parse(fs.readFileSync(path.join(root,'scripts/source/legacy-locations.json'),'utf8'));
 function app(withArt=true){const storage={},events={},nodes={app:{innerHTML:''}};
  const c=vm.createContext({navigator:{language:'zh-TW'},Date,Blob,URL:{createObjectURL(){return 'blob:test'},revokeObjectURL(){}},setTimeout(){},localStorage:{getItem(k){return storage[k]||null},setItem(k,v){storage[k]=v}},document:{documentElement:{},getElementById(k){return nodes[k]||null},addEventListener(k,f){events[k]=f}}});
