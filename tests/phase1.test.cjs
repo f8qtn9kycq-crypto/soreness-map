@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
+const source = fs.readFileSync(path.join(__dirname, '..', 'legacy.html'), 'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
 const part = (s, n = '', t = ['sore']) => ({s, t, n});
 const entries = [
   {id:101,date:'2026-10-01',workout:'private workout',parts:{'jKnee.R':part(4,'private note'),'traps.L':part(2)}},

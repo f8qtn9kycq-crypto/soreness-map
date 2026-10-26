@@ -10,8 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: node --test tests/freehand-data.test.cjs
+      - run: node --check assets/freehand-app.js && node --check assets/freehand-art.js
       - run: node tests/phase1.test.cjs
       - run: node tests/female-map.test.cjs
       - run: node --test tests/detailed-selection-state.test.cjs tests/detail-layout-projection.test.cjs
       - run: node scripts/build-detailed-location-catalog.cjs && git diff --exit-code -- docs/detailed-location-catalog.md
       - run: python3 scripts/build-female-map.py && git diff --exit-code -- assets/female-map.js docs/female-map-locations.md
+  browser-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: 安裝測試用瀏覽器（不加入產品依賴）
+        run: |
+          npm install --prefix "$RUNNER_TEMP/soreness-browser" --no-save playwright@1.60.0
+          "$RUNNER_TEMP/soreness-browser/node_modules/.bin/playwright" install --with-deps chromium webkit
+      - name: 自由塗畫使用情境
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/soreness-browser/node_modules/playwright
+        run: |
+          python3 -m http.server 8770 --bind 127.0.0.1 > "$RUNNER_TEMP/soreness-http.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          node -e 'async function ready(){for(let n=0;n<30;n++){try{const r=await fetch("http://127.0.0.1:8770/");if(r.ok)return;}catch{}await new Promise(r=>setTimeout(r,100));}process.exit(1)}ready()'
+          node scripts/freehand-browser-qa.cjs
+          node scripts/freehand-gesture-qa.cjs
