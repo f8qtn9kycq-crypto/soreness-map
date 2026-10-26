@@ -12,4 +12,6 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - run: node tests/phase1.test.cjs
       - run: node tests/female-map.test.cjs
+      - run: node --test tests/detailed-selection-state.test.cjs tests/detail-layout-projection.test.cjs
+      - run: node scripts/build-detailed-location-catalog.cjs && git diff --exit-code -- docs/detailed-location-catalog.md
       - run: python3 scripts/build-female-map.py && git diff --exit-code -- assets/female-map.js docs/female-map-locations.md

@@ -60,3 +60,9 @@
 [逐項位置對照](docs/female-map-locations.md)、[來源與MIT授權](THIRD-PARTY-NOTICES.md)。`assets/female-map.js` 須與 `index.html` 一起部署；產品仍無套件依賴或建置步驟。`python3 scripts/build-female-map.py` 可從repo內固定來源重建圖形，不需網路。
 
 另執行 `node tests/female-map.test.cjs` 驗證身分／可見性／左右／放大框／清單替代與歷史保真。兩組契約由GitHub Actions於PR及main更新時執行。`tests/geometry-fixture.html` 提供原生SVG命中與多尺寸版面驗證；瀏覽器驗證不等同真機或臨床定位審核。
+
+## 精細定位試用原型
+
+[開啟細分位置原型](prototypes/detailed-locations.html)：涵蓋 37 類與左右部位，完整人體聚焦、圖文相對位置同步、個別評分與完成狀態。再次點選可編輯；切換定位精度、移除與清空可復原。手足其他表面以參考圖選取。
+
+這是獨立試用頁，重新整理即清空；不讀寫正式紀錄、草稿、歷史或備份。分區描述主觀體表位置，不是經專家驗證的肌肉邊界。正式記錄仍使用首頁。見 [位置詞彙與公開參考](docs/detailed-location-catalog.md)、[驗證範圍](docs/qa/detailed-location-delivery.md)。
