@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>痠痛位置細分・互動原型</title>
+<link rel="icon" href="data:,">
+<style>
+:root{--bg:#eef2f3;--card:#fff;--ink:#22323a;--mut:#596d75;--line:#cfd9dc;--acc:#2f7f86;--accT:#fff;--sil:#f7fafa;--tint:#e7f3f3;--warn:#725025;--warnbg:#fff7e9;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#121c1e;--card:#1b2a2d;--ink:#e6eff0;--mut:#a6bbc0;--line:#42595f;--acc:#5fc0c8;--accT:#0b1d20;--sil:#223437;--tint:#233f42;--warn:#f0c887;--warnbg:#332b20;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 'PingFang TC','Microsoft JhengHei',system-ui,sans-serif}main{max-width:1060px;margin:auto;padding:22px 18px calc(40px + env(safe-area-inset-bottom))}h1{font-size:25px;line-height:1.35;margin:8px 0}h2{font-size:20px;margin:0}h3{font-size:17px;margin:0 0 8px}p{margin:8px 0}button,select,input{font:inherit;color:var(--ink)}button,select{min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:9px 12px}button{cursor:pointer}button:hover{border-color:var(--acc)}button:disabled{opacity:.5;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:3px}button.on,button.primary{background:var(--acc);color:var(--accT);border-color:var(--acc)}button.on{font-weight:600}a{color:var(--acc)}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.eyebrow{letter-spacing:.12em;font-size:12px;font-weight:700;color:var(--acc)}.mut{font-size:14px;color:var(--mut)}.notice{border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:12px 14px;background:var(--card);margin:18px 0}.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start}.card{border:1px solid var(--line);border-radius:18px;padding:18px;background:var(--card)}.step{display:inline-grid;place-items:center;border-radius:50%;background:var(--tint);color:var(--acc);width:28px;height:28px;margin-right:8px;font-size:15px}.seg{display:flex;gap:8px;margin:12px 0}.seg button{flex:1}.full{width:100%}label{display:block;margin:12px 0 6px;font-size:14px;color:var(--mut)}select{width:100%;min-width:0;appearance:none;-webkit-appearance:none;height:48px;padding-right:36px;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 20px) 21px,calc(100% - 14px) 21px;background-size:6px 6px;background-repeat:no-repeat}.body{width:100%;height:330px;display:block;margin:10px auto}.outline{fill:var(--sil);stroke:var(--ink);stroke-width:3;pointer-events:none}.art{fill:none;stroke:var(--mut);stroke-width:1.5;pointer-events:none}.hair{fill:var(--line);stroke:var(--mut);stroke-width:2;pointer-events:none}.hair-lines{fill:none;stroke:var(--mut);stroke-width:1.5;pointer-events:none}.hit{fill:transparent;stroke:none;cursor:pointer}.hit.selected{fill:var(--acc);fill-opacity:.25;stroke:var(--acc);stroke-width:2}.map-part:focus-visible{outline:none}.map-part:focus-visible .hit,.map-part:hover .hit{fill:var(--acc);fill-opacity:.35;stroke:var(--acc);stroke-width:3}.map-part.recorded .hit{fill:#e5ae58;fill-opacity:.35}.map-part.recorded .hit.selected{fill:var(--acc)}.crop{border:1px solid var(--line);border-radius:14px;background:var(--sil);padding:12px;margin:14px 0}.crop svg{width:100%;height:150px}.crop p{margin-bottom:0}.part-header{display:flex;justify-content:space-between;align-items:start;gap:12px}.count{white-space:nowrap;border-radius:8px;background:var(--tint);color:var(--acc);padding:4px 8px;font-size:13px}.zones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.zones.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.zones button{font-size:14px;line-height:1.5;min-height:60px;overflow-wrap:anywhere}.zones button.on::before{content:'✓ ';font-weight:700}.broad{display:flex;gap:8px;margin:12px 0}.broad button{flex:1;font-size:14px}.section-label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:16px 0 10px}.section-label p{margin:0}.rating{border-top:1px solid var(--line);padding-top:14px;margin-top:16px}.rating label{font-size:16px;color:var(--ink);font-weight:600;margin:0}.severity-value{font-weight:700;color:var(--acc);margin:6px 0}.range-row{display:flex;align-items:center;gap:12px}.range-row button{flex:0 0 48px;padding:0;font-size:24px}.range-row input{min-width:0;width:100%;min-height:48px;accent-color:var(--acc)}.range-ends{display:flex;justify-content:space-between;margin:0 60px;font-size:13px;color:var(--mut)}.summary{margin-top:18px}.summary ul{list-style:none;padding:0;margin:10px 0}.entry{border-top:1px solid var(--line);padding:10px 0;display:flex;align-items:center;justify-content:space-between;gap:12px}.entry button{text-align:left;flex:1;border:0;background:transparent;padding:4px 0}.entry .score{white-space:nowrap;font-size:14px;font-weight:600}.empty{padding:12px;border-radius:12px;background:var(--sil);color:var(--mut);font-size:14px}.sources{margin-top:18px}.sources summary{cursor:pointer;min-height:48px;display:flex;align-items:center;font-weight:600}.sources summary::after{content:"＋";margin-left:auto;padding-left:12px;font-size:20px;color:var(--acc)}.sources[open]>summary::after{content:"−"}.sources ul{padding-left:22px}.sources li{margin:8px 0}.warning{color:var(--warn);background:var(--warnbg);border-radius:10px;padding:10px;font-size:14px}.candidate{border:2px solid var(--acc);padding:10px;border-radius:12px;margin-top:12px}.candidate button{margin:4px}.legend{display:flex;gap:16px;justify-content:center;font-size:13px;color:var(--mut)}.legend b{color:var(--acc)}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}footer{margin-top:20px}.coverage{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.coverage span{font-size:13px;background:var(--tint);color:var(--acc);border-radius:8px;padding:4px 8px}[hidden]{display:none!important}
+@media(max-width:720px){main{padding:16px 12px 32px}.layout{grid-template-columns:1fr}.card{padding:14px}.body{height:250px}h1{font-size:23px}.top>button{flex-shrink:0}.zones.grid button{padding:8px 5px;font-size:13px}.crop svg{height:110px}.section-label{align-items:start}.part-header{gap:6px}}
+
+</style>
+<style>
+.crop .detail-image{display:block;width:100%;height:auto;max-width:none;background:var(--sil)}
+.diagram-scroll{width:100%;max-width:100%;overflow:auto;max-height:680px;border-radius:10px;overscroll-behavior:contain}
+.diagram-controls{display:flex;gap:8px;justify-content:flex-end;margin:0 0 8px}.diagram-controls button{font-size:14px}
+.detail-background{fill:var(--card);stroke:var(--mut);stroke-width:2;pointer-events:none}
+.detail-contour{fill:none;stroke:var(--ink);stroke-width:2.5;pointer-events:none}
+.detail-zone{cursor:pointer}.detail-hit{fill:var(--tint);stroke:var(--mut);stroke-width:1.8}
+.detail-zone.covered .detail-hit{fill:var(--acc);fill-opacity:.3}
+.detail-zone.on .detail-hit{fill:var(--acc);fill-opacity:.75;stroke:var(--ink);stroke-width:3}
+.detail-zone.current .detail-hit{stroke:var(--ink);stroke-width:4}
+.detail-zone .number-disc{fill:var(--card);stroke:var(--acc);stroke-width:2;pointer-events:all}
+.detail-zone .zone-number{fill:var(--ink);font:700 25px system-ui,sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.detail-zone.on .number-disc{fill:var(--acc)}.detail-zone.on .zone-number{fill:var(--accT)}
+.detail-zone:focus-visible{outline:none}.detail-zone:focus-visible .detail-hit,.detail-zone:hover .detail-hit{stroke:var(--ink);stroke-width:5}
+.diagram-label{fill:var(--mut);font:20px 'PingFang TC',system-ui,sans-serif;pointer-events:none}
+.detail-toolbar-label{fill:var(--ink);font:20px 'PingFang TC',system-ui,sans-serif;text-anchor:middle;pointer-events:none}
+.detail-zone .band-hit{fill:var(--card)}.detail-zone.on .band-hit{fill:var(--tint);fill-opacity:1}
+.diagram-explanation{font-size:13px;color:var(--mut)}
+.spatial-choice-scroll{max-width:100%;overflow-x:auto}.zone-slot{min-width:0;display:flex;flex-direction:column;gap:8px}.zone-slot button{width:100%;flex:1}
+.map-part.recorded .hit,.hit.selected,.map-part:hover .hit,.map-part:focus-visible .hit{fill:transparent;fill-opacity:0}
+.hit.selected{stroke:var(--acc);stroke-width:2.5;stroke-dasharray:7 5}
+.overview-detail{fill:var(--acc);fill-opacity:.75;stroke:var(--acc);stroke-width:1;pointer-events:none}
+.overview-unknown{fill:var(--ink);font:700 34px system-ui,sans-serif;text-anchor:middle;pointer-events:none}
+.layout{grid-template-columns:330px minmax(0,1fr)}
+.layout>*{min-width:0}.spatial-choice-scroll{min-width:0}
+.body-stage{border:1px solid var(--line);border-radius:14px;background:var(--sil);margin:14px 0;padding:12px}
+.body-stage .body{height:540px;max-width:none}.body-stage .body.focused{height:560px}
+.body-stage .detail-hit{fill:transparent;fill-opacity:0;stroke:var(--mut);stroke-width:1.2}
+.body-stage .detail-zone.on .detail-hit{stroke:var(--ink);stroke-width:2}
+.body-stage .detail-zone:focus-visible .detail-hit,.body-stage .detail-zone:hover .detail-hit{stroke:var(--ink);stroke-width:3}
+.body-stage .number-disc{stroke-width:1.2}.body-stage .zone-number{font-size:12px}
+.body-stage .legend{flex-wrap:wrap}.body-zoom-controls{display:flex;flex-wrap:wrap;gap:8px}.body-zoom-controls button{flex:1;white-space:nowrap}
+.reference-diagram{margin-top:16px}
+@media(max-width:720px){.layout{grid-template-columns:minmax(0,1fr)}.body-stage{padding:8px}.body-stage .body{height:440px}.body-stage .body.focused{height:460px}}
+</style>
+<style>
+.rating{position:fixed;z-index:20;bottom:12px;right:20px;width:400px;max-width:calc(100vw - 24px);max-height:60dvh;overflow:auto;background:var(--card);border:2px solid var(--acc);border-radius:16px;padding:14px;box-shadow:0 4px 24px #0003;margin:0}
+.rating h3{margin:0}.rating .mut{font-size:12px;margin:4px 0}.rating .range-ends{display:none}.rating .seg{margin:6px 0}.rating .full{min-height:40px}.editing{padding-bottom:370px}
+#undo-notice{position:sticky;bottom:8px;z-index:21;background:var(--warnbg);border:1px solid var(--line);border-radius:12px;padding:8px;margin:10px 0}
+.overview-detail.pending{fill-opacity:.3;stroke-dasharray:4 3}.detail-zone.pending .detail-hit{stroke-dasharray:4 3}.detail-zone.pending .number-disc{fill:var(--card)}.detail-zone.pending .zone-number{fill:var(--ink)}
+@media(max-width:720px){.rating{left:8px;right:8px;bottom:0;width:auto;max-width:none;padding-bottom:calc(10px + env(safe-area-inset-bottom));max-height:55dvh}.rating .range-row{gap:8px}}
+</style></head>
+<body>
+<main>
+  <header class="top"><div><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1></div><button id="lang" type="button">EN</button></header>
+  <div class="notice"><strong id="noticeTitle"></strong><p class="mut" id="notice"></p></div>
+  <div class="layout">
+    <section class="card" aria-labelledby="choose-title">
+      <h2 id="choose-title"></h2><p class="mut" id="side-hint"></p>
+      <div class="seg" id="layers" role="group"></div><div class="seg" id="views" role="group"></div>
+      <label for="region" id="region-label"></label><select id="region"></select>
+      <div class="seg" id="sides" role="group"></div>
+      <div class="coverage" id="coverage"></div>
+    </section>
+    <div>
+      <section class="card" aria-labelledby="part-title">
+        <div class="part-header"><div><span class="mut" id="detail-step"></span><h2 id="part-title" tabindex="-1"></h2></div><span class="count" id="option-count"></span></div>
+        <div class="body-stage"><div id="body-zoom" class="body-zoom-controls" role="group"></div><p class="mut" id="body-hint"></p><div id="body-map"></div><div class="legend" id="legend"></div><p class="mut" id="overview-status" role="status"></p><p class="mut" id="map-status" role="status"></p><div id="candidates" hidden></div></div>
+        <p class="mut" id="position-hint"></p>
+        <div id="zone-axes" class="mut"></div>
+        <p class="mut" id="spatial-hint"></p><div class="spatial-choice-scroll"><div id="zones" class="zones" role="group"></div></div>
+        <section id="other-surfaces" hidden><h3 id="other-title"></h3><div id="other-zones" class="zones"></div></section>
+        <details id="partial-directions" class="sources" hidden><summary id="partial-title"></summary><p class="mut" id="partial-hint"></p><div id="partial-zones" class="zones" role="group"></div></details>
+        <div class="broad" id="broad" role="group"></div>
+        <p class="mut" id="broad-hint"></p>
+        <details id="additional-diagram" class="sources reference-diagram"><summary id="reference-title"></summary><div class="crop"><div id="crop"></div><p class="mut" id="crop-hint"></p></div></details>
+        <div id="undo-notice" role="status" hidden><span id="undo-message"></span> <button id="undo" type="button"></button></div>
+        <section class="rating" id="rating" hidden aria-labelledby="rating-title">
+          <h3 id="rating-title"></h3><label for="severity" id="rating-label"></label><p class="severity-value" id="severity-value" aria-live="polite"></p>
+          <div class="range-row"><button id="less" type="button">−</button><input id="severity" type="range" min="1" max="10" step="1" value="1"><button id="more" type="button">＋</button></div>
+          <div class="seg"><button id="done-location" class="primary" type="button"></button><button id="close-editor" type="button"></button></div>
+          <div class="range-ends"><span>1</span><span>10</span></div><p class="mut" id="rating-hint"></p>
+        </section>
+        <details class="sources"><summary id="source-title"></summary><p class="mut" id="context"></p><ul id="source-list"></ul><p class="warning" id="source-warning"></p></details>
+      </section>
+      <section class="card summary" aria-labelledby="summary-title"><div class="top"><h2 id="summary-title"></h2><span class="count" id="total-count"></span></div><p class="mut" id="summary-hint"></p><div id="entries"></div><button class="full" id="clear" type="button"></button></section>
+    </div>
+  </div>
+  <footer class="mut"><p id="footer"></p><a href="../docs/detailed-location-catalog.md" id="catalog-link"></a> · <a href="../THIRD-PARTY-NOTICES.md" id="art-link"></a></footer>
+</main>
+<div class="sr" id="announce" role="status" aria-live="polite"></div>
+<script src="../assets/female-map.js"></script>
+<script src="detailed-locations.js"></script>
+<script src="detailed-region-diagrams.js"></script>
+<script src="detailed-location-image.js"></script>
+<script src="detailed-selection-state.js"></script>
+<script src="detailed-locations-app.js"></script>
+</body>
+</html>
