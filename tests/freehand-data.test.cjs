@@ -53,7 +53,7 @@ test('拒絕不安全 ID、錯誤版本、重複筆畫與超限文字，不猜�
   for (const id of ['', '<svg>', '../a', 'a b', 'a_1', 'a'.repeat(129)]) assert.throws(() => D.validateEntry(entry({id})));
   for (const date of ['2026-02-29','2026-13-01','2026-10-26T00:00:00','2026-1-01','']) assert.throws(() => D.validateDraft(draft({date})));
   assert.equal(D.validDate('2024-02-29'),true);
-  for (const severity of [0,11,1.5,NaN,Infinity,'4',undefined]) assert.throws(() => D.validateDraft(draft({strokes:[stroke({severity})]})));
+  for (const severity of [-1,11,1.5,NaN,Infinity,'4',undefined]) assert.throws(() => D.validateDraft(draft({strokes:[stroke({severity})]})));
   for (const extra of [{view:'SIDE'},{artVersion:'surface-v2'},{part:'jKnee.C'},{part:'knee.R'},{part:'__proto__'}, {note:'x'.repeat(10001)}]) assert.throws(() => D.validateDraft(draft({strokes:[stroke(extra)]})));
   assert.throws(() => D.validateDraft(draft({workout:'x'.repeat(10001)})));
   assert.throws(() => D.validateDraft(draft({strokes:[stroke(),stroke()]})));
@@ -244,3 +244,5 @@ test('新草稿寫入失敗回傳失敗，不改原草稿；刪除仍保留匯�
   assert.deepEqual(store.load().importedLegacy,[legacy()]);
   assert.deepEqual(store.load().draft,draft());
 });
+
+test('明確0分可保存備份與趨勢；null仍未評分且舊0保真',()=>{const e=entry({strokes:[stroke({severity:0})]});assert.equal(D.validateEntry(e).strokes[0].severity,0);assert.equal(D.parseBackup(D.makeBackup([], [e])).drawEntries[0].strokes[0].severity,0);assert.equal(D.trend([e],'jKnee.R')[0].severity,0);assert.throws(()=>D.validateEntry(entry({strokes:[stroke({severity:null})]})));});
