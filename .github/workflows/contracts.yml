@@ -35,3 +35,4 @@ jobs:
           node -e 'async function ready(){for(let n=0;n<30;n++){try{const r=await fetch("http://127.0.0.1:8770/");if(r.ok)return;}catch{}await new Promise(r=>setTimeout(r,100));}process.exit(1)}ready()'
           node scripts/freehand-browser-qa.cjs
           node scripts/freehand-gesture-qa.cjs
+          node scripts/slider-tabs-qa.cjs

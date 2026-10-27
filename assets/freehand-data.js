@@ -38,7 +38,7 @@
       return [...point];
     });
     if (typeof value.width !== 'number' || !Number.isFinite(value.width) || value.width < 0.001 || value.width > 0.2) fail('筆畫寬度不正確。');
-    if (!(value.severity === null && !saved) && !(Number.isInteger(value.severity) && value.severity >= 1 && value.severity <= 10)) fail('請為每一筆畫評分（1 至 10）。');
+    if (!(value.severity === null && !saved) && !(Number.isInteger(value.severity) && value.severity >= 0 && value.severity <= 10)) fail('請為每一筆畫評分（0 至 10）。');
     if (value.part !== null && !PARTS.includes(value.part)) fail('部位標籤不正確。');
     return {id:value.id,view:value.view,artVersion:'surface-v1',points,width:value.width,severity:value.severity,part:value.part,note:text(value.note)};
   }
