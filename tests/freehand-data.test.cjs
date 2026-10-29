@@ -246,3 +246,36 @@ test('新草稿寫入失敗回傳失敗，不改原草稿；刪除仍保留匯�
 });
 
 test('明確0分可保存備份與趨勢；null仍未評分且舊0保真',()=>{const e=entry({strokes:[stroke({severity:0})]});assert.equal(D.validateEntry(e).strokes[0].severity,0);assert.equal(D.parseBackup(D.makeBackup([], [e])).drawEntries[0].strokes[0].severity,0);assert.equal(D.trend([e],'jKnee.R')[0].severity,0);assert.throws(()=>D.validateEntry(entry({strokes:[stroke({severity:null})]})));});
+
+test('新體表位置可往返草稿、紀錄、JSON 備份；舊筆畫不補欄位且 0/null 保真',()=>{
+  const location={regions:['lowerLeg'],side:'R',surface:'outer'};
+  const saved=entry({strokes:[stroke({location,severity:0,view:'RO',part:'calf.R'})]});
+  const unsaved=draft({strokes:[stroke({location,severity:null,view:'RO',part:'calf.R'})]});
+  const parsed=D.parseBackup(JSON.stringify(D.makeBackup([legacy()],[saved],unsaved)));
+  assert.deepEqual(parsed,{entries:[legacy()],drawEntries:[saved],drawDraft:unsaved});
+  const normalized=D.validateEntry(saved);normalized.strokes[0].location.regions[0]='foot';
+  assert.equal(saved.strokes[0].location.regions[0],'lowerLeg');
+  assert.equal(Object.hasOwn(D.validateEntry(entry()).strokes[0],'location'),false);
+  const s=storage(),store=D.createStore(s);
+  assert.equal(store.saveDraft(unsaved).ok,true);assert.deepEqual(store.load().draft,unsaved);
+  assert.equal(store.saveEntry(saved).ok,true);assert.deepEqual(store.load().entries,[saved]);
+});
+test('無效新增位置整批拒絕，不覆寫既有資料；相同 ID 不同位置視為碰撞',()=>{
+  const location={regions:['lowerLeg'],side:'R',surface:'outer'};
+  for(const invalid of [null,{},undefined,{...location,regions:['calf']},{...location,regions:[]},{...location,regions:['lowerLeg','lowerLeg']},{...location,side:'right'},{...location,surface:'deep'}]) assert.throws(()=>D.validateDraft(draft({strokes:[stroke({location:invalid})]})));
+  const saved=entry({strokes:[stroke({location})]});
+  assert.throws(()=>D.mergeEntries([saved],[entry({strokes:[stroke({location:{...location,surface:'inner'}})]})]));
+  const s=storage(),store=D.createStore(s);store.saveEntry(entry());const before=copy(s.values);
+  assert.equal(store.importBackup({v:2,entries:[],drawEntries:[entry({id:'new',strokes:[stroke({location:null})]})]}).ok,false);
+  assert.deepEqual(s.values,before);
+});
+test('CSV 位置欄保留體表描述；舊列留空且原欄位與自由文字位置不變',()=>{
+  const location={regions:['thigh','knee'],side:'R',surface:'inner'};
+  const saved=entry({strokes:[stroke({location,part:null}),stroke({id:'old'})]});
+  const rows=readCSV(D.csv([saved]));
+  assert.equal(rows[0].at(-1),'location');assert.deepEqual(JSON.parse(rows[1].at(-1)),location);assert.equal(rows[2].at(-1),'');
+  assert.equal(rows[1][4],'R');assert.equal(rows[1][5],'');assert.equal(rows[1][6],'4');
+  const withText=readCSV(D.csv([saved],true));assert.equal(withText[0][7],'workout');assert.equal(withText[0][8],'note');assert.equal(withText[0][9],'location');
+});
+
+test('自動體表位置趨勢不指定肌肉，區域順序不同仍是一個觀察',()=>{const l={regions:['thigh','knee'],side:'R',surface:'inner'};const e=entry({strokes:[stroke({part:null,location:l})]});assert.equal(D.trend([e],{location:{...l,regions:['knee','thigh']}}).length,1);assert.equal(D.trend([e],'quads.R').length,0);assert.throws(()=>D.trend([e],{location:{...l,side:'invalid'}}));});

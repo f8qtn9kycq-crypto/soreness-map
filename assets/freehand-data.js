@@ -7,6 +7,7 @@
   'use strict';
   const KEYS = Object.freeze({entries:'bodymap.draw.v2',draft:'bodymap.draw.draft.v2'});
   const PARTS = Object.freeze(['scm','traps','chest','deltoid','biceps','forearmF','abs','obliques','hipFlexor','quads','adductors','itBand','shin','rhomboid','lats','erector','rearDelt','rotator','triceps','forearmE','gluteMax','gluteMed','hamstrings','calf','achilles','jNeck','jShoulder','jElbow','jWrist','jHand','jThoracic','jLumbar','jSI','jHip','jKnee','jAnkle','jFoot'].flatMap(id => ['R','L'].map(side => id+'.'+side)));
+  const LOCATION_REGIONS = Object.freeze(['neck','shoulder','chest','upperArm','elbow','forearm','wrist','hand','abdomen','upperBack','lowerBack','pelvis','hip','buttock','thigh','knee','lowerLeg','ankle','foot']);
   const VIEWS = Object.freeze(['F','B','RI','RO','LI','LO']);
   const LEGACY_TYPES = ['sore','pain','tight','sharp','numb'];
   const LEGACY_MAP = {neck:'jNeck',shoulder:'jShoulder',scapula:'rhomboid',upperBack:'jThoracic',lowerBack:'jLumbar',elbow:'jElbow',hip:'jHip',glute:'gluteMax',thighF:'quads',thighB:'hamstrings',knee:'jKnee',ankle:'jAnkle'};
@@ -30,6 +31,11 @@
     if (typeof value !== 'string' || value.length > MAX_TEXT) fail('文字格式不正確或超過 10000 字元。');
     return value;
   }
+  // 與 freehand-location 的封閉白名單同步；不依賴 DOM 或另一支 script。
+  function validateLocation(value) {
+    if (!record(value) || !Array.isArray(value.regions) || !value.regions.length || value.regions.length > LOCATION_REGIONS.length || value.regions.some(id => !LOCATION_REGIONS.includes(id)) || new Set(value.regions).size !== value.regions.length || ![null,'R','L'].includes(value.side) || ![null,'inner','outer','front','back'].includes(value.surface)) fail('體表位置格式不正確。');
+    return {regions:[...value.regions],side:value.side,surface:value.surface};
+  }
   function stroke(value, saved) {
     if (!record(value) || !safeId(value.id) || !VIEWS.includes(value.view) || value.artVersion !== 'surface-v1') fail('筆畫識別或人體圖版本不正確。');
     if (!Array.isArray(value.points) || value.points.length < 1 || value.points.length > 2000) fail('每筆畫需要 1 至 2000 個座標。');
@@ -40,7 +46,7 @@
     if (typeof value.width !== 'number' || !Number.isFinite(value.width) || value.width < 0.001 || value.width > 0.2) fail('筆畫寬度不正確。');
     if (!(value.severity === null && !saved) && !(Number.isInteger(value.severity) && value.severity >= 0 && value.severity <= 10)) fail('請為每一筆畫評分（0 至 10）。');
     if (value.part !== null && !PARTS.includes(value.part)) fail('部位標籤不正確。');
-    return {id:value.id,view:value.view,artVersion:'surface-v1',points,width:value.width,severity:value.severity,part:value.part,note:text(value.note)};
+    return {id:value.id,view:value.view,artVersion:'surface-v1',points,width:value.width,severity:value.severity,part:value.part,note:text(value.note),...(own(value,'location') ? {location:validateLocation(value.location)} : {})};
   }
   function normalize(value, saved) {
     if (!record(value) || !validDate(value.date) || !Array.isArray(value.strokes) || value.strokes.length > 200 || (saved && !value.strokes.length)) fail('日期或筆畫數量不正確。');
@@ -114,8 +120,10 @@
     return {v:2,entries:mergeLegacy([],legacyEntries),drawEntries:mergeEntries([],drawEntries),...(drawDraft === undefined ? {} : {drawDraft:validateDraft(drawDraft)})};
   }
   function trend(entries,part) {
-    if (part !== null && !PARTS.includes(part)) fail('趨勢部位不正確。');
-    return mergeEntries([],entries).flatMap(entry => entry.strokes.filter(item => item.part === part).map(item => ({entryId:entry.id,strokeId:item.id,date:entry.date,severity:item.severity}))).sort((a,b) => a.date.localeCompare(b.date));
+    const selector=record(part)&&own(part,'location')?validateLocation(part.location):null;
+    if(!selector&&part!==null&&!PARTS.includes(part))fail('趨勢部位不正確。');
+    const key=value=>JSON.stringify({regions:[...value.regions].sort(),side:value.side,surface:value.surface});
+    return mergeEntries([],entries).flatMap(entry=>entry.strokes.filter(item=>selector?own(item,'location')&&key(item.location)===key(selector):item.part===part).map(item=>({entryId:entry.id,strokeId:item.id,date:entry.date,severity:item.severity}))).sort((a,b)=>a.date.localeCompare(b.date));
   }
   function csv(entries,includeText = false) {
     const cell = value => {
@@ -123,10 +131,11 @@
       if (/^[\s\uFEFF]*[=+\-@]/.test(valueText)) valueText = "'"+valueText;
       return '"'+valueText.replace(/"/g,'""')+'"';
     };
-    // 側別只來自明確視角或手動部位標籤，不從筆畫座標推定。
-    const side = item => ['RI','RO'].includes(item.view) ? 'R' : ['LI','LO'].includes(item.view) ? 'L' : item.part === null ? '' : item.part.split('.')[1];
-    const rows = [['entry_id','date','stroke_id','view','side','part','severity',...(includeText ? ['workout','note'] : [])]];
-    for (const entry of mergeEntries([],entries)) for (const item of entry.strokes) rows.push([entry.id,entry.date,item.id,item.view,side(item),item.part,item.severity,...(includeText ? [entry.workout,item.note] : [])]);
+    const normalized = mergeEntries([],entries), hasLocation = normalized.some(entry => entry.strokes.some(item => own(item,'location')));
+    // 舊資料不補位置；新資料匯出已保存的體表描述，原有欄位順序不變。
+    const side = item => ['RI','RO'].includes(item.view) ? 'R' : ['LI','LO'].includes(item.view) ? 'L' : own(item,'location') ? item.location.side || '' : item.part === null ? '' : item.part.split('.')[1];
+    const rows = [['entry_id','date','stroke_id','view','side','part','severity',...(includeText ? ['workout','note'] : []),...(hasLocation ? ['location'] : [])]];
+    for (const entry of normalized) for (const item of entry.strokes) rows.push([entry.id,entry.date,item.id,item.view,side(item),item.part,item.severity,...(includeText ? [entry.workout,item.note] : []),...(hasLocation ? [own(item,'location') ? JSON.stringify(item.location) : ''] : [])]);
     return rows.map(row => row.map(cell).join(',')).join('\r\n');
   }
   function createStore(storage) {
@@ -203,5 +212,5 @@
     }
     return Object.freeze({load,saveDraft,saveEntry,importBackup,deleteEntry});
   }
-  return Object.freeze({KEYS,PARTS,VIEWS,validDate,emptyDraft,validateDraft,validateEntry,parseBackup,mergeEntries,makeBackup,csv,trend,createStore});
+  return Object.freeze({KEYS,PARTS,VIEWS,validateLocation,validDate,emptyDraft,validateDraft,validateEntry,parseBackup,mergeEntries,makeBackup,csv,trend,createStore});
 });
