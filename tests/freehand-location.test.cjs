@@ -103,3 +103,9 @@ test('粗筆跨區、跨側或內外地標時採保守描述，不只依中心�
   assert.equal(L.infer({...input,points:[[0.49,0.5]]},body,sides,hit).location.side,null);
   assert.equal(L.infer({...input,points:[[0.49,0.5]]},body,sides,hit).part,null);
 });
+
+test('全身小腿按膝踝中線描述內外側；左右鏡像與跨中線粗筆保持保守',()=>{
+ const map={locations:['R','L'].flatMap(side=>[{id:'shin',view:'F',side},{id:'jKnee',view:'F',side,labelPoint:[side==='R'?30:70,40]},{id:'jAnkle',view:'F',side,labelPoint:[side==='R'?30:70,90]}])};
+ const detect=(side,x,width=.01)=>L.infer({view:'F',points:[[x/100,.65]],width},{...body,legBounds:(y,s)=>s==='R'?[10,50]:[50,90]},map,(p,px)=>p.id==='shin'&&p.side===side&&(side==='R'?px<50:px>=50));
+ assert.equal(detect('R',15).location.surface,'outer');assert.equal(detect('R',42).location.surface,'inner');assert.equal(detect('L',85).location.surface,'outer');assert.equal(detect('L',58).location.surface,'inner');assert.equal(detect('R',30,.2).location.surface,'front');assert.equal(detect('R',39,.2).location.surface,'front');
+});

@@ -72,6 +72,11 @@
     // 大部分體內筆跡沒有對應區域時不以少數交點代表整筆；跨區／跨側保留集合。
     if(!regions.size || matched/points.length<0.6)return unknown;
     const location={regions:REGIONS.filter(id=>regions.has(id)),side:sides.size===1?[...sides][0]:null,surface:surfaces.size===1?[...surfaces][0]:null};
+    // 全身圖小腿按該高度的實際輪廓中線描述；筆寬跨中線時保留前後側。
+    if(stroke.view==='F'&&location.regions.length===1&&location.regions[0]==='lowerLeg'&&location.side&&typeof art.legBounds==='function'){
+      const directions=points.map(([x,y])=>{const bounds=art.legBounds(y,location.side);if(!bounds)return null;const d=(x-(bounds[0]+bounds[1])/2)*(location.side==='R'?1:-1);return d>8?'inner':d< -8?'outer':null;});
+      if(directions.length&&directions[0]&&directions.every(v=>v===directions[0]))location.surface=directions[0];
+    }
     // 體表範圍不自動指定肌肉；趨勢直接使用 location。
     return {location,part:null};
   }

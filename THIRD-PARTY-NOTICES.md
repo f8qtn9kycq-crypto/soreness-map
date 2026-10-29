@@ -29,3 +29,7 @@ SOFTWARE.
 ## 自由塗畫側面示意
 
 `assets/freehand-art.js` 的腿部內外側輪廓與地標為本專案原創體表示意；正背面沿用上述固定來源人體圖。側面沒有搬用外部教材或使用者圖片，不宣稱臨床解剖精度。圖形版本為 `surface-v1`，變更座標或輪廓須新增版本並保留舊紀錄的對應呈現。
+
+## 體表附近構造的文字參考
+
+總結的「附近肌肉／關節區域」文字參考 OpenStax《Anatomy and Physiology 2e》[11.6 下肢肌肉](https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs)與[9.6 滑液關節](https://openstax.org/books/anatomy-and-physiology-2e/pages/9-6-anatomy-of-selected-synovial-joints)。僅以自己的文字列出區域名稱，沒有搬用該書圖像。筆畫是使用者標記的體表範圍，附近構造不代表已確認疼痛的組織。
