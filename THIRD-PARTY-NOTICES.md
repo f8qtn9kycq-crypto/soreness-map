@@ -33,3 +33,7 @@ SOFTWARE.
 ## 體表附近構造的文字參考
 
 總結的「附近肌肉／關節區域」文字參考 OpenStax《Anatomy and Physiology 2e》[11.6 下肢肌肉](https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs)與[9.6 滑液關節](https://openstax.org/books/anatomy-and-physiology-2e/pages/9-6-anatomy-of-selected-synovial-joints)。僅以自己的文字列出區域名稱，沒有搬用該書圖像。筆畫是使用者標記的體表範圍，附近構造不代表已確認疼痛的組織。
+
+## 全身筆畫附近構造的名稱
+
+全身名稱另參考 OpenStax《Anatomy and Physiology 2e》的頭頸背部、腹壁胸廓、肩帶上肢、骨盆下肢及關節章節。逐項文字來源與群組／區域限制見 [名稱來源對照](docs/qa/anatomy-sources.md)。只核對文字，不搬用書中圖片。這些是筆畫附近構造的名稱，不是痠痛組織判定。
