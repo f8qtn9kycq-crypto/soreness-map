@@ -59,7 +59,8 @@
     if(!length)return [source[0]];
     // 超出可穩定取樣的長度時保留區域描述，不以稀疏取樣猜名稱。
     if(length>1440)return [];
-    const count=Math.min(80,Math.max(2,Math.ceil(length/6)+1)),result=[];
+    // 短線至少17點，避免粗取樣對窄熱區邊界造成比例偏差；不是獨立臨床觀察。
+    const count=Math.min(80,Math.max(17,Math.ceil(length/6)+1)),result=[];
     let cursor=0;
     for(let i=0;i<count;i++) {
       const target=length*i/(count-1);
@@ -80,11 +81,12 @@
     if(radius)for(const [count,scale] of [[4,0.5],[8,0.85]])for(let i=0;i<count;i++)offsets.push([Math.cos(i*2*Math.PI/count)*radius*scale,Math.sin(i*2*Math.PI/count)*radius*scale]);
     const locations=map.locations.filter(p=>p&&p.view===stroke.view&&['R','L'].includes(p.side)&&Object.prototype.hasOwnProperty.call(MAPPING,p.id));
     const counts=new Map();
-    let inside=0,matched=0;
+    let inside=0,matched=0,centerInside=0,centerMatched=0;
     for(const [cx,cy] of centers)for(const [dx,dy] of offsets) {
       const x=cx+dx,y=cy+dy;
       if(!art.inside(x,y))continue;
       inside++;
+      const core=dx===0&&dy===0;if(core)centerInside++;
       let any=false;
       const found=new Map();
       for(const location of locations)if(hit(location,x,y)) {
@@ -92,15 +94,21 @@
         const entry=MAPPING[location.id];
         if(entry.kind!=='fallback')found.set(entry.id+':'+location.side,{...entry,side:location.side});
       }
-      if(any)matched++;
+      if(any){matched++;if(core)centerMatched++;}
       for(const [key,entry] of found) {
         const prior=counts.get(key);
-        counts.set(key,{entry,count:(prior?prior.count:0)+1});
+        counts.set(key,{entry,count:(prior?prior.count:0)+1,core:(prior?prior.core:0)+(core?1:0)});
       }
     }
-    // 畫在輪廓外或只有少量已知熱區交點，不能代表整筆。
-    if(!inside||inside/(centers.length*offsets.length)<0.5||matched/inside<0.6)return empty();
-    const selected=[...counts.values()].filter(x=>x.count/inside>=0.15&&x.count>=Math.min(3,inside));
+    // 窄部位可有大部分筆刷落在輪廓外；明確位於熱區的整段中心線仍是位置證據。
+    // 兩種證據都不成立時，不以少量邊緣交點猜名稱。
+    const centerEvidence=centerInside/centers.length>=0.8&&centerMatched/centerInside>=0.8;
+    const areaEvidence=inside/(centers.length*offsets.length)>=0.5&&matched/inside>=0.6;
+    if(!inside||(!centerEvidence&&!areaEvidence))return empty();
+    const coreSupported=x=>centerEvidence&&x.core/centerInside>=0.3&&x.core>=Math.min(3,centerInside);
+    let selected=[...counts.values()].filter(x=>(areaEvidence&&x.count/inside>=0.15&&x.count>=Math.min(3,inside))||coreSupported(x));
+    // 筆刷同時碰到過多相鄰熱區時，只保留有中心線支持的名稱；仍模糊就退回區域。
+    if(selected.length>6)selected=selected.filter(coreSupported);
     if(selected.length>6)return empty();
     selected.sort((a,b)=>ORDER.indexOf(a.entry.id)-ORDER.indexOf(b.entry.id)||(a.entry.side==='R'?-1:1));
     const result=empty();
