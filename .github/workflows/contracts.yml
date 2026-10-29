@@ -38,6 +38,8 @@ jobs:
           node scripts/slider-tabs-qa.cjs
           node scripts/default-severity-qa.cjs
           node scripts/anatomy-labels-qa.cjs
+          node scripts/anatomy-coverage-qa.cjs
+          node scripts/anatomy-pointer-coverage-qa.cjs
           node scripts/auto-summary-qa.cjs
           node scripts/projection-boundary-qa.cjs
           APP_URL=http://127.0.0.1:8770/ node scripts/build-freehand-summary-geometry.cjs --check

@@ -70,3 +70,20 @@ test('工作量上限為 80 中心與 13 個筆刷樣本，僅查相同 native v
  const result=A.analyze(s,{box:[0,0,1000,1000],inside:()=>true},{locations:[loc('biceps'),loc('triceps','R','B')]},l=>{calls++;return l.view==='F';});
  assert.equal(calls,80*13);assert.deepEqual(ids(result),['biceps:R']);
 });
+
+test('窄部位整段中心線明確命中時，不因大筆刷涵蓋未知背景而漏判',()=>{
+ const narrow=[loc('forearmF','R','F',[48,0,52,100])];
+ assert.deepEqual(ids(analyze(stroke([[.5,.2],[.5,.8]],.2),narrow)),['forearmF:R']);
+ const narrowBody={...art,inside:(x,y)=>x>=48&&x<=52&&y>=0&&y<=100};
+ assert.deepEqual(ids(analyze(stroke([[.5,.2],[.5,.8]],.2),narrow,narrowBody)),['forearmF:R']);
+});
+test('中心線證據保留跨區，不以少量擦邊或原圖外筆畫補名稱',()=>{
+ const map=[loc('biceps','R','F',[48,0,52,45]),loc('forearmF','R','F',[48,45,52,100])];
+ assert.deepEqual(ids(analyze(stroke([[.5,.1],[.5,.9]],.2),map)),['biceps:R','forearmF:R']);
+ assert.deepEqual(analyze(stroke([[.4,.1],[.4,.9]],.2),[loc('biceps','R','F',[48,0,52,100])]),empty);
+ assert.deepEqual(analyze(stroke([[.5,.1],[.5,.9]],.2),[loc('biceps','R','F',[48,0,52,20])]),empty);
+});
+test('只有中心線證據成立時，不夾帶面積證據不足的鄰區名稱',()=>{
+ const r=analyze(stroke([[.5,.3],[.5,.7]],.2),[loc('forearmF','R','F',[49,0,51,100]),loc('jElbow','R','F',[56,0,57,100])]);
+ assert.deepEqual(ids(r),['forearmF:R']);
+});
