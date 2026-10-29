@@ -150,7 +150,7 @@ const px=(dx,v,s)=>(v=='F')===(s=='R')?100-dx:100+dx;
 const femaleMap=typeof window!=='undefined'?window.FEMALE_MAP:null;
 const mapAvailable=!!(femaleMap&&Array.isArray(femaleMap.locations)&&['F','B'].every(v=>femaleMap.views?.[v]&&typeof femaleMap.views[v].outline==='string'&&Array.isArray(femaleMap.views[v].art)&&femaleMap.zooms?.[v]?.length===6));
 const visibleLocations=(v,layer=S.layer)=>Z.filter(z=>z[1].includes(v)&&(isJ(z[0])?'j':'m')===layer).flatMap(z=>['R','L'].map(side=>z[0]+'.'+side));
-function openPart(key,trigger){if(!KS.includes(key))return;S.sel=key;S.mapCandidates=[];S.focusCandidates=false;S.focusReturn=trigger||`g[data-location="${key}"]`}
+function openPart(key,trigger){if(!KS.includes(key))return;const isNew=!Object.prototype.hasOwnProperty.call(S.draft.parts,key);if(isNew){S.draft.parts[key]={s:7,t:[],n:''};persist()}S.sel=isNew?null:key;S.mapCandidates=[];S.focusCandidates=false;S.focusReturn=trigger||`g[data-location="${key}"]`}
 function locationChoices(){const keys=visibleLocations(S.view);
 return `<div class="map-list"><label for="map-part">${i('choosePosition')}</label><select id="map-part"><option value="">${i('choosePosition')}</option>${keys.map(k=>`<option value="${k}">${name(k)}${S.draft.parts[k]?.s>0?' · '+S.draft.parts[k].s+'/10':''}</option>`).join('')}</select></div>`}
 function body(v,data,tap){

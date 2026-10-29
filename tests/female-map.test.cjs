@@ -24,13 +24,13 @@ a.run('H.save()');assert.deepEqual(a.plain('S.entries[0].parts'),all);
 a.run(`S.draft.parts=${JSON.stringify(all)};S.sel='traps.L';H.sev('0')`);assert.equal(a.run('S.entries[0].parts["traps.L"].s'),all['traps.L'].s);
 a.run("S.mapCandidates=['jNeck.R','jNeck.L'];S.layer='j';S.view='F'");assert.match(a.run('mapCandidates()'),/data-k="jNeck.R"/);a.run("H.view('B')");assert.deepEqual(a.plain('S.mapCandidates'),[]);
 console.log('PASS 畫面切換不改草稿、全部key儲存保真、摘要唯讀、候選清除');
-const b=app(false);assert.match(b.nodes.app.innerHTML,/人體圖未載入/);assert.match(b.nodes.app.innerHTML,/id="map-part"/);b.events.change({target:{id:'map-part',value:'scm.R'}});assert.equal(b.run('S.sel'),'scm.R');assert.match(b.nodes.app.innerHTML,/role="dialog"/);b.events.keydown({key:'Escape',preventDefault(){}});assert.equal(b.run('S.sel'),null);
+const b=app(false);assert.match(b.nodes.app.innerHTML,/人體圖未載入/);assert.match(b.nodes.app.innerHTML,/id="map-part"/);b.events.change({target:{id:'map-part',value:'scm.R'}});assert.equal(b.run('S.sel'),null);assert.equal(b.run('S.draft.parts["scm.R"].s'),7);b.events.change({target:{id:'map-part',value:'scm.R'}});assert.equal(b.run('S.sel'),'scm.R');assert.match(b.nodes.app.innerHTML,/role="dialog"/);b.events.keydown({key:'Escape',preventDefault(){}});assert.equal(b.run('S.sel'),null);
 console.log('PASS 圖形失敗仍可用清單開啟面板、Esc關閉');
 // Regression for a subtle SVG rule: each source fragment starts a fresh coordinate system.
 for(const p of map.locations)assert(!/z\s+m/i.test(p.path.replace(/z\s+M/g,'zM')),`relative fragment concatenation ${p.view}:${p.id}`);
 assert.match(map.source.license,/Copyright \(c\) 2022 ELABBASSI Hicham/);
 console.log('PASS MIT來源與獨立fragment起點保留');
-const ime=app();ime.run('openPart("jNeck.R","#map-part")');
+const ime=app();ime.run('openPart("jNeck.R","#map-part");openPart("jNeck.R","#map-part")');
 for(const extra of [{isComposing:true},{keyCode:229}]){ime.events.keydown({key:'Escape',preventDefault(){throw Error('IME Esc must remain native')},...extra});assert.equal(ime.run('S.sel'),'jNeck.R')}
 ime.events.keydown({key:'Escape',preventDefault(){}});assert.equal(ime.run('S.sel'),null);
 ime.run("S.mapCandidates=['traps.R','rhomboid.R'];H.tab('trend')");assert.deepEqual(ime.plain('S.mapCandidates'),[]);
@@ -40,7 +40,7 @@ const svg={getScreenCTM(){return {inverse(){return null}}},createSVGPoint(){retu
 function clickAt(keys){chosen=keys;clicks.events.click({detail:1,clientX:20,clientY:40,target:{closest(selector){return selector==='svg[data-map]'?svg:null}}})}
 clickAt(['hipFlexor.R','adductors.R']);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),chosen);assert.equal(clicks.run('S.focusCandidates'),true);
 clickAt([]);assert.match(clicks.run('S.msg'),/此處沒有可選位置/);assert.match(clicks.nodes.app.innerHTML,/role="status"/);assert.equal(clicks.run('S.sel'),null);assert.deepEqual(clicks.plain('S.mapCandidates'),[]);
-clickAt(['deltoid.R']);assert.equal(clicks.run('S.sel'),'deltoid.R');assert.deepEqual(clicks.plain('S.mapCandidates'),[]);assert.equal(clicks.run('S.focusReturn'),'g[data-location="deltoid.R"]');
+clickAt(['deltoid.R']);assert.equal(clicks.run('S.sel'),null);assert.equal(clicks.run('S.draft.parts["deltoid.R"].s'),7);clickAt(['deltoid.R']);assert.equal(clicks.run('S.sel'),'deltoid.R');assert.deepEqual(clicks.plain('S.mapCandidates'),[]);assert.equal(clicks.run('S.focusReturn'),'g[data-location="deltoid.R"]');
 console.log('PASS 點圖單一命中開啟／重疊不代選／空白不選，座標轉換與原觸發點還原');
 
 assert(map.views.F.art.every(a=>a.slug==='head'));assert(map.views.B.art.every(a=>a.slug==='head'));console.log('PASS 體表輪廓不渲染內部肌肉解剖線，互動位置維持不變');
