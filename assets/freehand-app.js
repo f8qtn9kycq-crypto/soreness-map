@@ -47,7 +47,21 @@ function renderControls(){
  $('zoom-tools').innerHTML=b('mode',S.mode==='focus'?'draw':'focus',t(S.mode==='focus'?'cancel':'focus'),S.mode==='focus')+b('zoom','in',t('closer'))+b('zoom','out',t('farther'))+b('zoom','full',t('full'));
 
 }
-function strokeLabel(s){return s.location&&window.FREEHAND_LOCATION?window.FREEHAND_LOCATION.label(s.location,S.lang):s.part?partLabel(s.part):t(s.view);}
+const anatomyCache=new WeakMap(),anatomyBounds=new Map();
+function anatomyInfo(s){
+ if(anatomyCache.has(s))return anatomyCache.get(s);
+ const fallback={muscles:[],joints:[],location:s.location};
+ if(!hasArt||!window.FREEHAND_ANATOMY||!['F','B'].includes(s.view))return fallback;
+ const a=A.get(s.view),svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),paths=new Map();
+ svg.setAttribute('viewBox',a.box.join(' '));svg.setAttribute('aria-hidden','true');svg.setAttribute('width','1');svg.setAttribute('height','1');svg.style.cssText='position:fixed;left:-10000px;top:0;pointer-events:none;visibility:hidden';
+ const path=d=>{const n=document.createElementNS(svg.namespaceURI,'path');n.setAttribute('d',d);svg.append(n);return n;};
+ const outline=path(a.outline),point=svg.createSVGPoint();document.body.append(svg);
+ const inPath=(p,x,y)=>{point.x=x;point.y=y;return p.isPointInFill(point);};
+ const art={...a,inside:(x,y)=>inPath(outline,x,y),legBounds:Summary?.legBounds};
+ const hit=(location,x,y)=>{if(!anatomyBounds.has(location.path)){const node=path(location.path);paths.set(location.path,node);const b=node.getBBox();anatomyBounds.set(location.path,{x:b.x,y:b.y,width:b.width,height:b.height});}const b=anatomyBounds.get(location.path);if(x<b.x||x>b.x+b.width||y<b.y||y>b.y+b.height)return false;if(!paths.has(location.path))paths.set(location.path,path(location.path));return inPath(paths.get(location.path),x,y);};
+ try{const info=window.FREEHAND_ANATOMY.analyze(s,art,window.FEMALE_MAP,hit),inferred=window.FREEHAND_LOCATION?.infer(s,art,window.FEMALE_MAP,hit);const result={...info,location:inferred?.location};anatomyCache.set(s,result);return result;}finally{svg.remove();}
+}
+function strokeLabel(s){const location=s.location||(!s.part?anatomyInfo(s).location:null);return location&&window.FREEHAND_LOCATION?window.FREEHAND_LOCATION.label(location,S.lang):s.part?partLabel(s.part):t(s.view);}
 function inferLocation(stroke){
  if(!hasArt||!window.FREEHAND_LOCATION)return {};
  const a=art(),svg=$('drawing'),point=svg.createSVGPoint(),paths=new Map(),detector=document.createElementNS('http://www.w3.org/2000/svg','g');detector.setAttribute('visibility','hidden');detector.setAttribute('pointer-events','none');detector.setAttribute('aria-hidden','true');svg.append(detector);
@@ -55,8 +69,10 @@ function inferLocation(stroke){
  try{return window.FREEHAND_LOCATION.infer(stroke,{...a,inside:(x,y)=>inside([x,y]),legBounds:Summary?.legBounds},window.FEMALE_MAP,hit);}finally{detector.remove();}
 }
 function nearbyMarkup(s){
- const n=Summary?Summary.nearby(s,S.lang):{muscles:[],joints:[]};
- return [n.muscles.length?`<div><small>${S.lang==='zh'?'附近肌肉':'Nearby muscles'}</small><strong>${esc(n.muscles.join('、'))}</strong></div>`:'',n.joints.length?`<div><small>${S.lang==='zh'?'關節區域':'Joint area'}</small><strong>${esc(n.joints.join('、'))}</strong></div>`:''].filter(Boolean).map(x=>`<div class="anatomy-note">${x}</div>`).join('');
+ const info=anatomyInfo(s),old=Summary?Summary.nearby(s,S.lang):{muscles:[],joints:[]};
+ const sideName=x=>`${x.side?(S.lang==='zh'?(x.side==='R'?'右':'左'):(x.side==='R'?'Right ':'Left ')):''}${x[S.lang==='zh'?'zh':'en']}`;
+ const n=['F','B'].includes(s.view)?{muscles:info.muscles.map(sideName),joints:info.joints.map(sideName)}:old;
+ return [n.muscles.length?`<div><small>${S.lang==='zh'?'附近肌肉':'Nearby muscles'}</small><strong>${esc(n.muscles.join(S.lang==='zh'?'、':'; '))}</strong></div>`:'',n.joints.length?`<div><small>${S.lang==='zh'?'關節區域':'Joint area'}</small><strong>${esc(n.joints.join(S.lang==='zh'?'、':'; '))}</strong></div>`:''].filter(Boolean).map(x=>`<div class="anatomy-note">${x}</div>`).join('');
 }
 function bodyImages(strokes,prefix,editable=false){
  if(!hasArt)return '';
@@ -67,7 +83,7 @@ function bodyImages(strokes,prefix,editable=false){
  }).join('');
 }
 function projectionNote(strokes){return strokes.some(s=>!['F','B'].includes(s.view))?`<p class="hint">${S.lang==='zh'?'舊內外側筆畫以全身位置示意呈現，原始紀錄保持不變。':'Earlier side-view marks are shown as approximate locations; original records are unchanged.'}</p>`:'';}
-function renderList(){const pending=S.draft.strokes.filter(s=>s.severity===null).length;$('stroke-list').innerHTML=(pending?`<p class="hint">${pending} ${t('pending')}</p>`:'')+S.draft.strokes.map((s,i)=>`<div class="stroke-row"><button type="button" data-action="select" data-value="${s.id}">${i+1}. ${esc(strokeLabel(s))} · ${s.severity===null?t('unrated'):s.severity+'/10'}</button></div>`).join('');$('clear').disabled=!S.draft.strokes.length;$('date').value=S.draft.date;$('workout').value=S.draft.workout;}
+function renderList(){const pending=S.draft.strokes.filter(s=>s.severity===null).length;$('stroke-list').innerHTML=(pending?`<p class="hint">${pending} ${t('pending')}</p>`:'')+S.draft.strokes.map((s,i)=>`<div class="stroke-row"><button type="button" data-action="select" data-value="${s.id}">${i+1}. ${esc(strokeLabel(s))} · ${s.severity===null?t('unrated'):s.severity+'/10'}</button>${nearbyMarkup(s)}</div>`).join('');$('clear').disabled=!S.draft.strokes.length;$('date').value=S.draft.date;$('workout').value=S.draft.workout;}
 function renderEditor(){const s=current();$('editor').hidden=!s;document.body.classList.toggle('editing',!!s&&S.tab==='record');if(!s||S.tab!=='record'){$('editor').hidden=true;return;}$('editor-title').textContent=`${S.draft.strokes.indexOf(s)+1}. ${strokeLabel(s)} · ${s.severity===null?t('unrated'):s.severity+'/10'}`;$('severity-label').textContent=t('severityLabel');$('severity-value').textContent=s.severity===null?t('unrated'):s.severity+'/10';$('severity').value=s.severity??0;$('severity').setAttribute('aria-valuetext',s.severity===null?t('unrated'):s.severity+'/10');$('less').setAttribute('aria-label',t('less'));$('more').setAttribute('aria-label',t('more'));$('less').disabled=s.severity===0;$('more').disabled=s.severity===10;$('zero-label').textContent=t('zero');$('ten-label').textContent=t('ten');$('part').innerHTML=partOptions(s.part);$('note').value=s.note;}
 function renderRecord(){renderCanvas();renderControls();renderList();renderEditor();}
 function selectStroke(id){ratingSnapshot=false;const s=S.draft.strokes.find(s=>s.id===id);if(!s)return;S.selected=id;const view=displayStrokes([s])[0]?.view||'F';if(S.view!==view)S.camera=null;S.view=view;S.mode='draw';S.fresh=false;$('stroke-options').open=false;renderRecord();}

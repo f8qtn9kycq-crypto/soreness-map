@@ -11,3 +11,4 @@
 .summary-surfaces{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.summary-surface{min-width:0}.summary-surface h3{text-align:center}.summary-map{height:350px;width:100%}.anatomy-note{padding:10px 14px;border-left:3px solid #59bbc1;margin:8px 0 16px}.anatomy-note small,.anatomy-note strong{display:block}.anatomy-note small{opacity:.7;margin-bottom:4px}
 
 .summary-hit{fill:none;stroke:transparent;stroke-linecap:round;stroke-linejoin:round;pointer-events:stroke}
+.stroke-row{display:block}.stroke-row>button{width:100%}.stroke-row .anatomy-note{margin:6px 0 12px}.stroke-row .anatomy-note small{white-space:normal}
