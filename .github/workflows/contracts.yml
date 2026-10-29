@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - run: node --test tests/freehand-data.test.cjs tests/freehand-location.test.cjs tests/freehand-trend.test.cjs
+      - run: node --test tests/freehand-data.test.cjs tests/freehand-location.test.cjs tests/freehand-trend.test.cjs tests/freehand-summary.test.cjs
       - run: node --check assets/freehand-app.js && node --check assets/freehand-art.js
       - run: node tests/phase1.test.cjs
       - run: node tests/female-map.test.cjs
@@ -37,4 +37,6 @@ jobs:
           node scripts/freehand-gesture-qa.cjs
           node scripts/slider-tabs-qa.cjs
           node scripts/auto-summary-qa.cjs
+          node scripts/projection-boundary-qa.cjs
+          APP_URL=http://127.0.0.1:8770/ node scripts/build-freehand-summary-geometry.cjs --check
           node scripts/trend-overview-qa.cjs
