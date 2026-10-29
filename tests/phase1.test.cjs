@@ -86,6 +86,13 @@ test('滑桿未操作不記錄；逐格調整保留DOM、備註與歷史，鍵�
  assert.deepEqual(a.plain('S.entries'),before);assert.equal(JSON.parse(a.storage['bodymap.draft']).parts['jKnee.R'].s,1);
  a.run('S.lang="en"');assert.match(a.run('sheet()'),/1\/10 · Mild/);
 });
+test('新選部位預設7，重選保留既有分數與舊0，不改歷史',()=>{
+ const a=history(),before=a.plain('S.entries');
+ a.run('openPart("chest.R")');assert.equal(a.run('S.sel'),null);assert.equal(a.run('S.draft.parts["chest.R"].s'),7);assert.equal(JSON.parse(a.storage['bodymap.draft']).parts['chest.R'].s,7);
+ a.run('S.draft.parts["chest.R"].s=3;openPart("chest.R")');assert.equal(a.run('S.draft.parts["chest.R"].s'),3);
+ a.run('S.draft.parts["chest.L"]={s:0,t:[],n:"舊未知"};openPart("chest.L")');assert.equal(a.run('S.draft.parts["chest.L"].s'),0);
+ assert.deepEqual(a.plain('S.entries'),before);
+});
 test('37 個穩定部位、左右 key、storage key 與舊名稱匯入相容', () => {
   const a=history(),ids=['scm','traps','chest','deltoid','biceps','forearmF','abs','obliques','hipFlexor','quads','adductors','itBand','shin','rhomboid','lats','erector','rearDelt','rotator','triceps','forearmE','gluteMax','gluteMed','hamstrings','calf','achilles','jNeck','jShoulder','jElbow','jWrist','jHand','jThoracic','jLumbar','jSI','jHip','jKnee','jAnkle','jFoot'];
   assert.deepEqual(a.plain('Object.keys(N)'),ids);assert.deepEqual(a.plain('KS'),ids.flatMap(id=>['R','L'].map(side=>id+'.'+side)));

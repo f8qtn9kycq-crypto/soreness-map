@@ -6,7 +6,7 @@ const old=[{id:101,date:'2026-10-01',workout:'old workout',parts:{'jKnee.R':{s:3
 async function screen(page,x,y){return page.evaluate(({x,y})=>{const s=document.querySelector('#drawing'),p=s.createSVGPoint();p.x=x;p.y=y;const q=p.matrixTransform(s.getScreenCTM());return [q.x,q.y];},{x,y});}
 async function paint(page,points){await page.locator('#drawing').scrollIntoViewIfNeeded();const ps=[];for(const p of points)ps.push(await screen(page,...p));await page.mouse.move(...ps[0]);await page.mouse.down();for(const p of ps.slice(1))await page.mouse.move(...p,{steps:8});await page.mouse.up();}
 async function clickWorld(page,x,y){await page.locator('#drawing').scrollIntoViewIfNeeded();await page.mouse.click(...await screen(page,x,y));}
-async function score(page,n){await page.locator('#severity').fill(String(n));await page.locator('#close-editor').click();assert.equal(await page.locator('#editor').isVisible(),false);}
+async function score(page,n){if(!await page.locator('#editor').isVisible())await page.locator('[data-action=select]').last().click();await page.locator('#severity').fill(String(n));await page.locator('#close-editor').click();assert.equal(await page.locator('#editor').isVisible(),false);}
 async function draft(page){return page.evaluate(()=>window.FREEHAND_DATA.createStore(localStorage).load().draft);}
 async function go(page,tab){await page.locator(`[data-tab="${tab==='backup'?'history':tab}"]`).click();if(tab==='backup')await page.locator('#backup-options').evaluate(e=>e.open=true);}
 (async()=>{fs.mkdirSync('output/playwright',{recursive:true});const report=[];
@@ -17,7 +17,7 @@ await context.addInitScript(data=>{if(!localStorage.getItem('seeded')){localStor
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(url);
 assert((await page.locator('#drawing').boundingBox()).y<300,'body available in first viewport');
 const point=await page.evaluate(()=>window.FEMALE_MAP.locations.find(p=>p.id==='quads'&&p.side==='R'&&p.view==='F').labelPoint);
-await paint(page,[point,[point[0],point[1]+60]]);assert.equal((await draft(page)).strokes.length,1);assert.equal((await draft(page)).strokes[0].severity,null);
+await paint(page,[point,[point[0],point[1]+60]]);assert.equal((await draft(page)).strokes.length,1);assert.equal((await draft(page)).strokes[0].severity,7);
 await score(page,3);await page.reload();assert.equal((await draft(page)).strokes[0].severity,3);
 await page.locator('[data-action="select"]').click();assert.match(await page.locator('#editor-title').innerText(),/3\/10/);
 await page.locator('#stroke-options').evaluate(e=>e.open=true);await page.selectOption('#part','quads.R');await page.locator('#note').fill('private note');await page.locator('#close-editor').click();
